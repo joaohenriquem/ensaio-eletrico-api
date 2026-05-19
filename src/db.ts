@@ -1,3 +1,4 @@
+import dns from 'dns'
 import pg from 'pg'
 import { CAMPOS_JSONB } from './constants.js'
 
@@ -5,12 +6,48 @@ const { Pool } = pg
 
 let _pool: pg.Pool | null = null
 
-function pool(): pg.Pool {
+function parseDatabaseUrl(url: string) {
+  const parsed = new URL(url)
+  return {
+    host: parsed.hostname,
+    port: Number(parsed.port || 5432),
+    user: decodeURIComponent(parsed.username),
+    password: decodeURIComponent(parsed.password),
+    database: parsed.pathname.slice(1),
+  }
+}
+
+async function resolveHost(host: string): Promise<string> {
+  if (/^[0-9.]+$/.test(host) || /^[0-9a-fA-F:]+$/.test(host)) {
+    return host
+  }
+
+  try {
+    const addresses = await dns.promises.lookup(host, { family: 4, all: true })
+    if (addresses.length > 0) {
+      return addresses[0].address
+    }
+  } catch {
+    // fallback para host original
+  }
+
+  return host
+}
+
+async function pool(): Promise<pg.Pool> {
   if (!_pool) {
     const url = process.env.DATABASE_URL
     if (!url) throw new Error('DATABASE_URL não configurada')
+
+    const config = parseDatabaseUrl(url)
+    const host = await resolveHost(config.host)
+
     _pool = new Pool({
-      connectionString: url,
+      host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+      database: config.database,
       ssl: { rejectUnauthorized: false },
       max: 10,
       idleTimeoutMillis: 30000,
@@ -49,7 +86,7 @@ export async function inserir(tabela: string, doc: Record<string, unknown>): Pro
   const valores = Object.values(data)
   const placeholders = campos.map((_, i) => `$${i + 1}`).join(', ')
   const sql = `INSERT INTO ${tabela} (${campos.join(', ')}) VALUES (${placeholders}) RETURNING id`
-  const client = await pool().connect()
+  const client = await (await pool()).connect()
   try {
     const res = await client.query(sql, valores)
     return String(res.rows[0].id)
@@ -69,7 +106,7 @@ export async function atualizar(
     .join(', ')
   const valores = [...Object.values(data), id]
   const sql = `UPDATE ${tabela} SET ${sets} WHERE id = $${valores.length} RETURNING id`
-  const client = await pool().connect()
+  const client = await (await pool()).connect()
   try {
     const res = await client.query(sql, valores)
     return (res.rowCount ?? 0) > 0
@@ -82,7 +119,7 @@ export async function buscarPorId(
   tabela: string,
   id: string
 ): Promise<Record<string, unknown> | null> {
-  const client = await pool().connect()
+  const client = await (await pool()).connect()
   try {
     const res = await client.query(`SELECT * FROM ${tabela} WHERE id = $1`, [id])
     if (res.rows.length === 0) return null
@@ -93,7 +130,7 @@ export async function buscarPorId(
 }
 
 export async function deletar(tabela: string, id: string): Promise<boolean> {
-  const client = await pool().connect()
+  const client = await (await pool()).connect()
   try {
     const res = await client.query(`DELETE FROM ${tabela} WHERE id = $1`, [id])
     return (res.rowCount ?? 0) > 0
@@ -139,7 +176,7 @@ export async function listar(
   const orderBy = orderParts.length > 0 ? `ORDER BY ${orderParts.join(', ')}` : 'ORDER BY criado_em DESC'
 
   const sql = `SELECT * FROM ${tabela} ${where} ${orderBy}`
-  const client = await pool().connect()
+  const client = await (await pool()).connect()
   try {
     const res = await client.query(sql, valores)
     return (res.rows as Record<string, unknown>[]).map(rowToObj)
@@ -172,7 +209,7 @@ export async function contar(
 
   const where = condicoes.length > 0 ? `WHERE ${condicoes.join(' AND ')}` : ''
   const sql = `SELECT COUNT(*) FROM ${tabela} ${where}`
-  const client = await pool().connect()
+  const client = await (await pool()).connect()
   try {
     const res = await client.query(sql, valores)
     return parseInt(res.rows[0].count as string, 10)
@@ -190,7 +227,7 @@ export async function proximoNumero(tabela: string, prefixo: string): Promise<st
 
 export async function testarConexao(): Promise<boolean> {
   try {
-    const client = await pool().connect()
+    const client = await (await pool()).connect()
     await client.query('SELECT 1')
     client.release()
     return true

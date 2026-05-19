@@ -11,7 +11,7 @@ import ordensRoutes from './routes/ordens.js'
 import relatoriosRoutes from './routes/relatorios.js'
 import propostasRoutes from './routes/propostas.js'
 import uploadsRoutes from './routes/uploads.js'
-import { buscarPorId, atualizar } from './db.js'
+import { buscarPorId, atualizar, testarConexao } from './db.js'
 import { gerarTokenAcao } from './mailer.js'
 import { readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
@@ -43,7 +43,10 @@ app.use(
 
 app.use('/*', logger())
 
-app.get('/api/health', (c) => c.json({ ok: true, ts: new Date().toISOString() }))
+app.get('/api/health', async (c) => {
+  const dbOk = await testarConexao()
+  return c.json({ ok: dbOk, ts: new Date().toISOString(), db: dbOk ? 'ok' : 'unreachable' }, dbOk ? 200 : 503)
+})
 
 // rota pública — deve ficar ANTES do router autenticado de ordens
 app.get('/api/ordens/:id/resposta', async (c) => {
