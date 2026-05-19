@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: ensaio-eletrico-api
+    env: node
+    root: .
+    branch: main
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        value: "postgresql://postgres:[SUA-SENHA]@db.seu-projeto.supabase.co:5432/postgres"
+      - key: JWT_SECRET
+        value: "troque-por-uma-string-longa-e-segura"
+      - key: APP_URL
+        value: "https://<seu-servico>.onrender.com"
+      - key: BREVO_API_KEY
+        value: ""
+      - key: BREVO_SENDER
+        value: "ensaioeletrico.servicos@gmail.com"
+      - key: SUPABASE_URL
+        value: "https://<seu-projeto>.supabase.co"
+      - key: SUPABASE_ANON_KEY
+        value: ""
