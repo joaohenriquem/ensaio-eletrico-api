@@ -136,17 +136,25 @@ Edite o arquivo `.env` com suas credenciais:
 DATABASE_URL=postgresql://postgres:[SUA-SENHA]@db.[SEU-PROJETO].supabase.co:5432/postgres
 JWT_SECRET=uma-string-longa-e-aleatoria-aqui
 APP_URL=http://localhost:3001
+FRONTEND_URL=https://<seu-static-site>.onrender.com
 BREVO_API_KEY=...
 BREVO_SENDER=ensaioeletrico.servicos@gmail.com
 SUPABASE_URL=https://<seu-projeto>.supabase.co
 SUPABASE_ANON_KEY=...
 ```
 
-Instale as dependências e inicie:
+Instale as dependências e inicie em modo de desenvolvimento:
 
 ```bash
 npm install
 npm run dev
+```
+
+Para rodar em produção localmente:
+
+```bash
+npm run build
+npm start
 ```
 
 O backend ficará disponível em `http://localhost:3001`.
@@ -167,6 +175,7 @@ O backend ficará disponível em `http://localhost:3001`.
 DATABASE_URL=postgresql://usuario:senha@host:porta/banco
 JWT_SECRET=uma-string-secreta-forte
 APP_URL=https://<seu-servico>.onrender.com
+FRONTEND_URL=https://<seu-static-site>.onrender.com
 BREVO_API_KEY=...
 BREVO_SENDER=ensaioeletrico.servicos@gmail.com
 SUPABASE_URL=https://<seu-projeto>.supabase.co
@@ -174,6 +183,8 @@ SUPABASE_ANON_KEY=...
 ```
 
 > O Render injeta automaticamente a variável `PORT`, então não é necessário definir `PORT` manualmente.
+
+O backend usa `FRONTEND_URL` para liberar CORS para seu frontend hospedado, então essa variável é necessária quando o frontend rodar em outro domínio.
 
 7. Inicie o deploy e verifique se o serviço sobe sem erro.
 8. Teste o endpoint de saúde:
@@ -247,6 +258,7 @@ ensaio-eletrico-api/
 | `BREVO_SENDER` | E-mail remetente para notificações | Não |
 | `SUPABASE_URL` | URL do projeto Supabase | Sim |
 | `SUPABASE_ANON_KEY` | Chave anônima para uploads | Sim |
+| `FRONTEND_URL` | URL pública do frontend para CORS | Sim |
 
 ---
 
