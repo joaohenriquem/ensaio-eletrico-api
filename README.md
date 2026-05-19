@@ -6,7 +6,6 @@ Sistema de gestão operacional para empresa de inspeção e manutenção elétri
 
 | Camada | Stack |
 |--------|-------|
-| Frontend | React 19, TypeScript, Vite 6, Tailwind CSS 4, React Router 7, TanStack Query 5 |
 | Backend | Hono, Node.js 20, TypeScript, esbuild |
 | Banco de dados | PostgreSQL (Supabase) |
 | Autenticação | JWT (jose) + bcryptjs |
@@ -122,22 +121,25 @@ VALUES (
 
 ```bash
 git clone <url-do-repositorio>
-cd ensaio-eletrico-v2
+cd ensaio-eletrico-api
 ```
 
 ### 2. Configure o backend
 
 ```bash
-cd backend
 cp .env.example .env
 ```
 
-Edite o arquivo `backend/.env` com suas credenciais:
+Edite o arquivo `.env` com suas credenciais:
 
 ```env
 DATABASE_URL=postgresql://postgres:[SUA-SENHA]@db.[SEU-PROJETO].supabase.co:5432/postgres
 JWT_SECRET=uma-string-longa-e-aleatoria-aqui
-PORT=3001
+APP_URL=http://localhost:3001
+BREVO_API_KEY=...
+BREVO_SENDER=ensaioeletrico.servicos@gmail.com
+SUPABASE_URL=https://<seu-projeto>.supabase.co
+SUPABASE_ANON_KEY=...
 ```
 
 Instale as dependências e inicie:
@@ -149,17 +151,38 @@ npm run dev
 
 O backend ficará disponível em `http://localhost:3001`.
 
-### 3. Configure o frontend
+## Deploy no Render
 
-Em outro terminal:
+1. Crie um novo serviço **Web Service** no Render.
+2. Conecte ao repositório GitHub do projeto.
+3. Use `.` como diretório raiz do serviço.
+4. Configure os comandos:
+   - `Build Command`: `npm install && npm run build`
+   - `Start Command`: `npm start`
+   - `Health Check Path`: `/api/health`
+5. Defina o ambiente como `Node 20` (ou equivalente).
+6. Adicione as variáveis de ambiente a seguir no Render:
 
-```bash
-cd frontend
-npm install
-npm run dev
+```env
+DATABASE_URL=postgresql://usuario:senha@host:porta/banco
+JWT_SECRET=uma-string-secreta-forte
+APP_URL=https://<seu-servico>.onrender.com
+BREVO_API_KEY=...
+BREVO_SENDER=ensaioeletrico.servicos@gmail.com
+SUPABASE_URL=https://<seu-projeto>.supabase.co
+SUPABASE_ANON_KEY=...
 ```
 
-O frontend ficará disponível em `http://localhost:5173`.
+> O Render injeta automaticamente a variável `PORT`, então não é necessário definir `PORT` manualmente.
+
+7. Inicie o deploy e verifique se o serviço sobe sem erro.
+8. Teste o endpoint de saúde:
+
+```bash
+curl https://<seu-servico>.onrender.com/api/health
+```
+
+Se retornar `{ "ok": true }`, o deploy está funcionando.
 
 ---
 
@@ -173,19 +196,11 @@ O frontend ficará disponível em `http://localhost:5173`.
 | `npm run build` | Gera bundle de produção em `dist/` |
 | `npm start` | Executa o build de produção |
 
-### Frontend
-
-| Comando | Descrição |
-|---------|-----------|
-| `npm run dev` | Inicia servidor de desenvolvimento (porta 5173) |
-| `npm run build` | Verificação TypeScript + build de produção |
-| `npm run preview` | Pré-visualiza o build de produção |
-
 ---
 
 ## Primeiro acesso
 
-Após subir o projeto, acesse `http://localhost:5173` e faça login com:
+Após subir o backend, use a interface de frontend separada ou ferramentas de API para se conectar aos endpoints. Os dados de login padrão para o usuário administrador são:
 
 - **E-mail:** `admin@ensaioeletrico.com.br`
 - **Senha:** `admin123`
@@ -207,26 +222,16 @@ Após subir o projeto, acesse `http://localhost:5173` e faça login com:
 ## Estrutura do projeto
 
 ```
-ensaio-eletrico-v2/
-├── backend/
-│   ├── src/
-│   │   ├── index.ts          # Entrada do servidor
-│   │   ├── auth.ts           # JWT e hashing de senha
-│   │   ├── db.ts             # Camada de acesso ao banco
-│   │   ├── constants.ts      # Dados da empresa e normas elétricas
-│   │   ├── routes/           # Rotas da API
-│   │   └── pdf/              # Geração de PDFs
-│   └── .env.example
-│
-└── frontend/
-    ├── src/
-    │   ├── App.tsx           # Rotas e providers
-    │   ├── api/              # Chamadas à API
-    │   ├── hooks/            # Hooks com TanStack Query
-    │   ├── pages/            # Páginas da aplicação
-    │   ├── components/       # Componentes reutilizáveis
-    │   └── utils/            # Utilitários e formatadores
-    └── vite.config.ts
+ensaio-eletrico-api/
+├── src/
+│   ├── index.ts          # Entrada do servidor
+│   ├── auth.ts           # JWT e hashing de senha
+│   ├── db.ts             # Camada de acesso ao banco
+│   ├── constants.ts      # Dados da empresa e normas elétricas
+│   ├── routes/           # Rotas da API
+│   └── pdf/              # Geração de PDFs
+├── static/
+└── .env.example
 ```
 
 ---
@@ -237,7 +242,11 @@ ensaio-eletrico-v2/
 |----------|-----------|-------------|
 | `DATABASE_URL` | URL de conexão PostgreSQL | Sim |
 | `JWT_SECRET` | Chave secreta para assinar tokens JWT | Sim |
-| `PORT` | Porta do servidor backend (padrão: 3001) | Não |
+| `APP_URL` | URL pública do backend | Sim |
+| `BREVO_API_KEY` | API key para envio de e-mail via Brevo | Sim |
+| `BREVO_SENDER` | E-mail remetente para notificações | Não |
+| `SUPABASE_URL` | URL do projeto Supabase | Sim |
+| `SUPABASE_ANON_KEY` | Chave anônima para uploads | Sim |
 
 ---
 
@@ -246,17 +255,8 @@ ensaio-eletrico-v2/
 ### Backend
 
 ```bash
-cd backend
 npm run build
 npm start
 ```
 
-### Frontend
-
-```bash
-cd frontend
-npm run build
-# Arquivos gerados em frontend/dist/ — sirva com nginx, Vercel, Netlify, etc.
-```
-
-Certifique-se de configurar a variável de ambiente `VITE_API_URL` no frontend se o backend estiver em um domínio diferente, e atualize a configuração de proxy no `vite.config.ts` conforme necessário.
+Este repositório contém apenas o backend. Use o frontend em outro repositório ou projeto separado.
