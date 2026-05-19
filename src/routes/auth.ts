@@ -61,12 +61,16 @@ auth.post('/login', async (c) => {
     return c.json({ error: 'Seu cadastro não foi aprovado. Entre em contato com o administrador.' }, 403)
   }
 
+  const email = String(usuario.email ?? '').trim()
+  const nome = String(usuario.nome ?? login)
+
+  if (!email) {
+    return c.json({ error: 'Este usuário não possui e-mail cadastrado. Contate o administrador.' }, 400)
+  }
+
   const otp = gerarOtp()
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
   await atualizar('usuarios', String(usuario._id), { otp_code: otp, otp_expires_at: expiresAt })
-
-  const email = String(usuario.email ?? '')
-  const nome = String(usuario.nome ?? login)
 
   try {
     await enviarEmailOtp(email, nome, otp)
