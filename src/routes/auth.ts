@@ -5,36 +5,14 @@ import { verificarSenha, gerarToken } from '../auth.js'
 const auth = new Hono()
 
 auth.post('/login', async (c) => {
-  const { email, username, password } = await c.req.json<{ email?: string; username?: string; password: string }>()
-  const login = String(email ?? username ?? '').trim()
+  const { username, password } = await c.req.json<{ username: string; password: string }>()
+  const login = String(username ?? '').trim()
 
   if (!login || !password) {
-    return c.json({ error: 'E-mail/usuário e senha são obrigatórios' }, 400)
+    return c.json({ error: 'Usuário e senha são obrigatórios' }, 400)
   }
 
-  let usuarios: Record<string, unknown>[] = []
-  try {
-    usuarios = await listar('usuarios', { email: login })
-  } catch (err) {
-    const mensagem = err instanceof Error ? err.message : String(err)
-    if (!/column .*email.*does not exist|42703/.test(mensagem)) {
-      throw err
-    }
-  }
-
-  if (usuarios.length === 0) {
-    try {
-      usuarios = await listar('usuarios', { username: login })
-    } catch (err) {
-      const mensagem = err instanceof Error ? err.message : String(err)
-      if (/column .*username.*does not exist|42703/.test(mensagem)) {
-        usuarios = []
-      } else {
-        throw err
-      }
-    }
-  }
-
+  const usuarios = await listar('usuarios', { username: login })
   if (usuarios.length === 0) {
     return c.json({ error: 'Usuário ou senha inválidos' }, 401)
   }
