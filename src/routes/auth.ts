@@ -253,6 +253,7 @@ auth.post('/register', async (c) => {
 
 auth.use('/usuarios/*', authMiddleware)
 auth.use('/usuarios', authMiddleware)
+auth.use('/login-logs', authMiddleware)
 
 auth.get('/usuarios', async (c) => {
   const user = c.get('user')
