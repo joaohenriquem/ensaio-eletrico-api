@@ -59,6 +59,25 @@ export async function enviarEmailConclusao(os: Record<string, unknown>, destinat
   await enviar(destinatario, `[${os.numero}] Serviço Concluído – Ensaio Elétrico`, templateConclusao(os))
 }
 
+export async function enviarEmailCadastroRecebido(usuario: Record<string, unknown>) {
+  await enviar(String(usuario.email), 'Cadastro recebido – Ensaio Elétrico', templateCadastroRecebido(usuario))
+}
+
+export async function enviarEmailAdminNovoCadastro(usuario: Record<string, unknown>) {
+  const adminEmail = process.env.BREVO_SENDER ?? 'ensaioeletrico.servicos@gmail.com'
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+  await enviar(adminEmail, `Novo cadastro pendente: ${usuario.nome}`, templateAdminNovoCadastro(usuario, frontendUrl))
+}
+
+export async function enviarEmailUsuarioAprovado(usuario: Record<string, unknown>) {
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+  await enviar(String(usuario.email), 'Acesso aprovado – Ensaio Elétrico', templateUsuarioAprovado(usuario, frontendUrl))
+}
+
+export async function enviarEmailUsuarioRejeitado(usuario: Record<string, unknown>, motivo?: string) {
+  await enviar(String(usuario.email), 'Cadastro não aprovado – Ensaio Elétrico', templateUsuarioRejeitado(usuario, motivo))
+}
+
 function base(conteudo: string): string {
   const logo = logoSrc()
   const header = logo
@@ -114,6 +133,67 @@ function templateAprovacao(os: Record<string, unknown>, urlAprovar: string, urlR
       <a href="${urlReprovar}" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:bold;font-size:15px;">❌ Reprovar</a>
     </div>
     <p style="color:#6b7280;font-size:12px;">Dúvidas: 📞 (11) 92137-4849 / (11) 98521-9614</p>
+  `)
+}
+
+function templateCadastroRecebido(usuario: Record<string, unknown>): string {
+  return base(`
+    <h2 style="color:#1c1c2e;margin-top:0;">Cadastro Recebido!</h2>
+    <p style="color:#374151;">Olá, <strong>${usuario.nome}</strong>!</p>
+    <p style="color:#374151;">Seu cadastro foi recebido com sucesso e está aguardando aprovação de um administrador.</p>
+    <div style="background:#fffbeb;padding:12px 16px;border-left:4px solid #f0a500;margin:16px 0;">
+      <p style="margin:0;color:#374151;">Você receberá um e-mail assim que seu acesso for liberado. Este processo geralmente leva menos de 24 horas.</p>
+    </div>
+    <p style="color:#6b7280;font-size:13px;">Dúvidas: 📞 (11) 92137-4849 / ensaioeletrico.servicos@gmail.com</p>
+  `)
+}
+
+function templateAdminNovoCadastro(usuario: Record<string, unknown>, frontendUrl: string): string {
+  return base(`
+    <h2 style="color:#1c1c2e;margin-top:0;">Novo Cadastro Pendente</h2>
+    <p style="color:#374151;">Um novo usuário solicitou acesso ao sistema:</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr style="background:#f9fafb;">
+        <td style="padding:8px 12px;font-weight:bold;color:#374151;width:40%;">Nome</td>
+        <td style="padding:8px 12px;color:#111827;">${usuario.nome}</td>
+      </tr>
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#374151;">E-mail</td>
+        <td style="padding:8px 12px;color:#111827;">${usuario.email}</td>
+      </tr>
+      <tr style="background:#f9fafb;">
+        <td style="padding:8px 12px;font-weight:bold;color:#374151;">Usuário</td>
+        <td style="padding:8px 12px;color:#111827;">${usuario.username}</td>
+      </tr>
+      <tr style="background:#ffffff;">
+        <td style="padding:8px 12px;font-weight:bold;color:#374151;">Perfil</td>
+        <td style="padding:8px 12px;color:#111827;">${usuario.perfil}</td>
+      </tr>
+    </table>
+    <a href="${frontendUrl}/usuarios" style="display:inline-block;background:#1c1c2e;color:#f0a500;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:bold;font-size:15px;">Gerenciar Usuários</a>
+  `)
+}
+
+function templateUsuarioAprovado(usuario: Record<string, unknown>, frontendUrl: string): string {
+  return base(`
+    <h2 style="color:#1c1c2e;margin-top:0;">✅ Acesso Aprovado!</h2>
+    <p style="color:#374151;">Olá, <strong>${usuario.nome}</strong>!</p>
+    <p style="color:#374151;">Seu cadastro foi <strong style="color:#16a34a;">aprovado</strong>. Você já pode acessar o sistema com seu usuário e senha.</p>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${frontendUrl}/login" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:bold;font-size:15px;">Acessar o Sistema</a>
+    </div>
+    <p style="color:#6b7280;font-size:13px;">Dúvidas: 📞 (11) 92137-4849 / ensaioeletrico.servicos@gmail.com</p>
+  `)
+}
+
+function templateUsuarioRejeitado(usuario: Record<string, unknown>, motivo?: string): string {
+  return base(`
+    <h2 style="color:#1c1c2e;margin-top:0;">Cadastro Não Aprovado</h2>
+    <p style="color:#374151;">Olá, <strong>${usuario.nome}</strong>!</p>
+    <p style="color:#374151;">Infelizmente seu cadastro não foi aprovado neste momento.</p>
+    ${motivo ? `<div style="background:#fef2f2;padding:12px 16px;border-left:4px solid #dc2626;margin:16px 0;"><p style="margin:0;color:#374151;"><strong>Motivo:</strong> ${motivo}</p></div>` : ''}
+    <p style="color:#374151;">Em caso de dúvidas, entre em contato conosco.</p>
+    <p style="color:#6b7280;font-size:13px;">📞 (11) 92137-4849 / ensaioeletrico.servicos@gmail.com</p>
   `)
 }
 
