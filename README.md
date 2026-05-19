@@ -195,6 +195,16 @@ curl https://<seu-servico>.onrender.com/api/health
 
 Se retornar `{ "ok": true }`, o deploy está funcionando.
 
+### Métricas internas
+
+A API também expõe um endpoint de logs:
+
+```bash
+curl https://<seu-servico>.onrender.com/api/logs
+```
+
+Ele retorna as últimas requisições registradas, o status, duração e um resumo de erros.
+
 ---
 
 ## Scripts disponíveis

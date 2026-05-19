@@ -12,6 +12,7 @@ import relatoriosRoutes from './routes/relatorios.js'
 import propostasRoutes from './routes/propostas.js'
 import uploadsRoutes from './routes/uploads.js'
 import { buscarPorId, atualizar, testarConexao } from './db.js'
+import { monitorMiddleware, recordError, getLogs, getLogSummary } from './monitor.js'
 import { gerarTokenAcao } from './mailer.js'
 import { readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
@@ -41,12 +42,21 @@ app.use(
   })
 )
 
+app.use('/*', monitorMiddleware)
 app.use('/*', logger())
+
+app.onError((err, c) => {
+  recordError()
+  console.error('Uncaught error:', err)
+  return c.json({ error: 'Internal Server Error' }, 500)
+})
 
 app.get('/api/health', async (c) => {
   const dbOk = await testarConexao()
   return c.json({ ok: dbOk, ts: new Date().toISOString(), db: dbOk ? 'ok' : 'unreachable' }, dbOk ? 200 : 503)
 })
+
+app.get('/api/logs', (c) => c.json({ summary: getLogSummary(), logs: getLogs() }))
 
 // rota pública — deve ficar ANTES do router autenticado de ordens
 app.get('/api/ordens/:id/resposta', async (c) => {
