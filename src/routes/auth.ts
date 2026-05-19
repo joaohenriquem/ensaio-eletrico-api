@@ -9,7 +9,7 @@ import {
   enviarEmailUsuarioRejeitado,
 } from '../mailer.js'
 
-const auth = new Hono()
+const auth = new Hono<{ Variables: { user: JwtPayload } }>()
 
 auth.post('/login', async (c) => {
   const { username, password } = await c.req.json<{ username: string; password: string }>()
