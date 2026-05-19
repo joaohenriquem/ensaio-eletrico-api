@@ -8,8 +8,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function logoSrc(): string {
   try {
-    const data = readFileSync(resolve(__dirname, 'static/logo.jpeg'))
-    return `data:image/jpeg;base64,${data.toString('base64')}`
+    const data = readFileSync(resolve(__dirname, 'static/logo_ensaio_eletrico.png'))
+    return `data:image/png;base64,${data.toString('base64')}`
   } catch {
     return ''
   }
@@ -57,6 +57,10 @@ export async function enviarEmailAprovacao(os: Record<string, unknown>, destinat
 
 export async function enviarEmailConclusao(os: Record<string, unknown>, destinatario: string) {
   await enviar(destinatario, `[${os.numero}] Serviço Concluído – Ensaio Elétrico`, templateConclusao(os))
+}
+
+export async function enviarEmailOtp(destinatario: string, nome: string, codigo: string) {
+  await enviar(destinatario, 'Seu código de acesso – Ensaio Elétrico', templateOtp(nome, codigo))
 }
 
 export async function enviarEmailCadastroRecebido(usuario: Record<string, unknown>) {
@@ -133,6 +137,20 @@ function templateAprovacao(os: Record<string, unknown>, urlAprovar: string, urlR
       <a href="${urlReprovar}" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:bold;font-size:15px;">❌ Reprovar</a>
     </div>
     <p style="color:#6b7280;font-size:12px;">Dúvidas: 📞 (11) 92137-4849 / (11) 98521-9614</p>
+  `)
+}
+
+function templateOtp(nome: string, codigo: string): string {
+  return base(`
+    <h2 style="color:#1e3050;margin-top:0;">Código de Verificação</h2>
+    <p style="color:#374151;">Olá, <strong>${nome}</strong>!</p>
+    <p style="color:#374151;">Use o código abaixo para concluir seu acesso. Ele expira em <strong>5 minutos</strong>.</p>
+    <div style="text-align:center;margin:32px 0;">
+      <div style="display:inline-block;background:#1e3050;color:#f0a500;font-size:36px;font-weight:bold;letter-spacing:12px;padding:16px 32px;border-radius:12px;">
+        ${codigo}
+      </div>
+    </div>
+    <p style="color:#6b7280;font-size:13px;">Se você não tentou fazer login, ignore este e-mail.</p>
   `)
 }
 

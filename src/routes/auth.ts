@@ -3,6 +3,7 @@ import { listar, inserir, buscarPorId, atualizar } from '../db.js'
 import { verificarSenha, gerarToken, hashSenha, authMiddleware } from '../auth.js'
 import type { JwtPayload } from '../auth.js'
 import {
+  enviarEmailOtp,
   enviarEmailCadastroRecebido,
   enviarEmailAdminNovoCadastro,
   enviarEmailUsuarioAprovado,
@@ -10,6 +11,27 @@ import {
 } from '../mailer.js'
 
 const auth = new Hono<{ Variables: { user: JwtPayload } }>()
+
+function gerarOtp(): string {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
+
+async function reverseGeocode(lat: number, lon: number): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+      { headers: { 'User-Agent': 'EnsaioEletrico/2.0' } }
+    )
+    const data = await res.json() as { display_name?: string; address?: { city?: string; town?: string; state?: string; country?: string } }
+    const a = data.address ?? {}
+    const cidade = a.city ?? a.town ?? ''
+    const estado = a.state ?? ''
+    const pais = a.country ?? ''
+    return [cidade, estado, pais].filter(Boolean).join(', ') || data.display_name || ''
+  } catch {
+    return ''
+  }
+}
 
 auth.post('/login', async (c) => {
   const { username, password } = await c.req.json<{ username: string; password: string }>()
@@ -38,11 +60,71 @@ auth.post('/login', async (c) => {
     return c.json({ error: 'Seu cadastro não foi aprovado. Entre em contato com o administrador.' }, 403)
   }
 
+  const otp = gerarOtp()
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+  await atualizar('usuarios', String(usuario._id), { otp_code: otp, otp_expires_at: expiresAt })
+
+  const email = String(usuario.email ?? '')
+  const nome = String(usuario.nome ?? login)
+
+  try {
+    await enviarEmailOtp(email, nome, otp)
+  } catch (err) {
+    console.error('Erro ao enviar OTP:', err)
+    return c.json({ error: 'Erro ao enviar código de verificação. Tente novamente.' }, 500)
+  }
+
+  return c.json({ requiresMfa: true, userId: String(usuario._id), email: email.replace(/(.{2}).+(@.+)/, '$1***$2') })
+})
+
+auth.post('/verify-otp', async (c) => {
+  const { userId, otp, latitude, longitude } = await c.req.json<{
+    userId: string
+    otp: string
+    latitude?: number
+    longitude?: number
+  }>()
+
+  if (!userId || !otp) {
+    return c.json({ error: 'Dados inválidos' }, 400)
+  }
+
+  const usuario = await buscarPorId('usuarios', userId)
+  if (!usuario) return c.json({ error: 'Usuário não encontrado' }, 404)
+
+  if (!usuario.otp_code || usuario.otp_code !== otp) {
+    return c.json({ error: 'Código inválido' }, 401)
+  }
+
+  const expiresAt = new Date(String(usuario.otp_expires_at)).getTime()
+  if (Date.now() > expiresAt) {
+    return c.json({ error: 'Código expirado. Faça login novamente.' }, 401)
+  }
+
+  await atualizar('usuarios', userId, { otp_code: null, otp_expires_at: null })
+
+  let endereco = ''
+  if (latitude != null && longitude != null) {
+    endereco = await reverseGeocode(latitude, longitude)
+  }
+
+  try {
+    await inserir('login_logs', {
+      usuario_id: userId,
+      usuario_nome: String(usuario.nome ?? ''),
+      latitude: latitude ?? null,
+      longitude: longitude ?? null,
+      endereco: endereco || null,
+    })
+  } catch (err) {
+    console.error('Erro ao registrar login log:', err)
+  }
+
   const loginValue = String(usuario.email ?? usuario.username ?? '')
   const nomeValue = String(usuario.nome ?? loginValue)
 
   const token = await gerarToken({
-    id: String(usuario._id),
+    id: userId,
     username: loginValue,
     nome: nomeValue,
     perfil: String(usuario.perfil ?? 'Técnico'),
@@ -84,15 +166,10 @@ auth.post('/register', async (c) => {
     listar('usuarios', { username: username.trim() }),
   ])
 
-  if (emailExistente.length > 0) {
-    return c.json({ error: 'Este e-mail já está cadastrado' }, 409)
-  }
-  if (usernameExistente.length > 0) {
-    return c.json({ error: 'Este usuário já está em uso' }, 409)
-  }
+  if (emailExistente.length > 0) return c.json({ error: 'Este e-mail já está cadastrado' }, 409)
+  if (usernameExistente.length > 0) return c.json({ error: 'Este usuário já está em uso' }, 409)
 
   const senhaHash = await hashSenha(senha)
-
   const id = await inserir('usuarios', {
     nome: nome.trim(),
     email: email.trim().toLowerCase(),
@@ -116,16 +193,14 @@ auth.post('/register', async (c) => {
   return c.json({ message: 'Cadastro realizado com sucesso! Aguarde a aprovação.' }, 201)
 })
 
-// Rotas de administração — exigem auth + perfil Administrador
 auth.use('/usuarios/*', authMiddleware)
 auth.use('/usuarios', authMiddleware)
 
 auth.get('/usuarios', async (c) => {
-  const user = c.get('user') as JwtPayload
+  const user = c.get('user')
   if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
     return c.json({ error: 'Acesso restrito a administradores' }, 403)
   }
-
   const usuarios = await listar('usuarios', {}, [['criado_em', -1]])
   return c.json(
     usuarios.map((u) => ({
@@ -140,47 +215,46 @@ auth.get('/usuarios', async (c) => {
   )
 })
 
-auth.put('/usuarios/:id/aprovar', async (c) => {
-  const user = c.get('user') as JwtPayload
+auth.get('/login-logs', async (c) => {
+  const user = c.get('user')
   if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
     return c.json({ error: 'Acesso restrito a administradores' }, 403)
   }
+  const logs = await listar('login_logs', {}, [['criado_em', -1]])
+  return c.json(logs.map(l => ({
+    id: l._id,
+    usuario_nome: l.usuario_nome,
+    latitude: l.latitude,
+    longitude: l.longitude,
+    endereco: l.endereco,
+    criado_em: l.criado_em,
+  })))
+})
 
+auth.put('/usuarios/:id/aprovar', async (c) => {
+  const user = c.get('user')
+  if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
+    return c.json({ error: 'Acesso restrito a administradores' }, 403)
+  }
   const id = c.req.param('id')
   const usuario = await buscarPorId('usuarios', id)
   if (!usuario) return c.json({ error: 'Usuário não encontrado' }, 404)
-
   await atualizar('usuarios', id, { status: 'aprovado', motivo_rejeicao: null })
-
-  try {
-    await enviarEmailUsuarioAprovado(usuario)
-  } catch (err) {
-    console.error('Erro ao enviar e-mail de aprovação:', err)
-  }
-
+  try { await enviarEmailUsuarioAprovado(usuario) } catch (err) { console.error(err) }
   return c.json({ message: 'Usuário aprovado com sucesso' })
 })
 
 auth.put('/usuarios/:id/rejeitar', async (c) => {
-  const user = c.get('user') as JwtPayload
+  const user = c.get('user')
   if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
     return c.json({ error: 'Acesso restrito a administradores' }, 403)
   }
-
   const id = c.req.param('id')
   const { motivo } = await c.req.json<{ motivo?: string }>().catch(() => ({ motivo: undefined }))
-
   const usuario = await buscarPorId('usuarios', id)
   if (!usuario) return c.json({ error: 'Usuário não encontrado' }, 404)
-
   await atualizar('usuarios', id, { status: 'rejeitado', motivo_rejeicao: motivo ?? null })
-
-  try {
-    await enviarEmailUsuarioRejeitado(usuario, motivo)
-  } catch (err) {
-    console.error('Erro ao enviar e-mail de rejeição:', err)
-  }
-
+  try { await enviarEmailUsuarioRejeitado(usuario, motivo) } catch (err) { console.error(err) }
   return c.json({ message: 'Usuário rejeitado' })
 })
 
