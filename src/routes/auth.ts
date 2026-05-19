@@ -122,7 +122,7 @@ auth.use('/usuarios', authMiddleware)
 
 auth.get('/usuarios', async (c) => {
   const user = c.get('user') as JwtPayload
-  if (user.perfil !== 'Administrador') {
+  if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
     return c.json({ error: 'Acesso restrito a administradores' }, 403)
   }
 
@@ -142,7 +142,7 @@ auth.get('/usuarios', async (c) => {
 
 auth.put('/usuarios/:id/aprovar', async (c) => {
   const user = c.get('user') as JwtPayload
-  if (user.perfil !== 'Administrador') {
+  if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
     return c.json({ error: 'Acesso restrito a administradores' }, 403)
   }
 
@@ -163,7 +163,7 @@ auth.put('/usuarios/:id/aprovar', async (c) => {
 
 auth.put('/usuarios/:id/rejeitar', async (c) => {
   const user = c.get('user') as JwtPayload
-  if (user.perfil !== 'Administrador') {
+  if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
     return c.json({ error: 'Acesso restrito a administradores' }, 403)
   }
 
