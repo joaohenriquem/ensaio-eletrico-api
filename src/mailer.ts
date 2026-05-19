@@ -85,11 +85,11 @@ function base(conteudo: string): string {
     : `<h1 style="color:#f0a500;margin:0;font-size:22px;">ENSAIO ELÉTRICO</h1>`
   return `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-      <div style="background:#1c1c2e;padding:24px;text-align:center;">
+      <div style="background:#1e3050;padding:24px;text-align:center;">
         ${header}
       </div>
       <div style="padding:32px;background:#ffffff;border:1px solid #e5e7eb;">${conteudo}</div>
-      <div style="background:#1c1c2e;padding:16px;text-align:center;">
+      <div style="background:#1e3050;padding:16px;text-align:center;">
         <p style="color:rgba(255,255,255,.3);font-size:11px;margin:0;">
           Ensaio Elétrico · CNPJ 61.841.485/0001-30 · Osasco – SP<br>
           (11) 92137-4849 · ensaioeletrico.servicos@gmail.com
@@ -120,7 +120,7 @@ function tabelaOS(os: Record<string, unknown>): string {
 
 function templateAprovacao(os: Record<string, unknown>, urlAprovar: string, urlReprovar: string): string {
   return base(`
-    <h2 style="color:#1c1c2e;margin-top:0;">Solicitação de Aprovação de OS</h2>
+    <h2 style="color:#1e3050;margin-top:0;">Solicitação de Aprovação de OS</h2>
     <p style="color:#374151;">Prezado(a) cliente, segue abaixo os detalhes da Ordem de Serviço para sua análise e aprovação:</p>
     ${tabelaOS(os)}
     <div style="background:#fffbeb;padding:12px 16px;border-left:4px solid #f0a500;margin:16px 0;">
@@ -138,7 +138,7 @@ function templateAprovacao(os: Record<string, unknown>, urlAprovar: string, urlR
 
 function templateCadastroRecebido(usuario: Record<string, unknown>): string {
   return base(`
-    <h2 style="color:#1c1c2e;margin-top:0;">Cadastro Recebido!</h2>
+    <h2 style="color:#1e3050;margin-top:0;">Cadastro Recebido!</h2>
     <p style="color:#374151;">Olá, <strong>${usuario.nome}</strong>!</p>
     <p style="color:#374151;">Seu cadastro foi recebido com sucesso e está aguardando aprovação de um administrador.</p>
     <div style="background:#fffbeb;padding:12px 16px;border-left:4px solid #f0a500;margin:16px 0;">
@@ -150,7 +150,7 @@ function templateCadastroRecebido(usuario: Record<string, unknown>): string {
 
 function templateAdminNovoCadastro(usuario: Record<string, unknown>, frontendUrl: string): string {
   return base(`
-    <h2 style="color:#1c1c2e;margin-top:0;">Novo Cadastro Pendente</h2>
+    <h2 style="color:#1e3050;margin-top:0;">Novo Cadastro Pendente</h2>
     <p style="color:#374151;">Um novo usuário solicitou acesso ao sistema:</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;">
       <tr style="background:#f9fafb;">
@@ -170,13 +170,13 @@ function templateAdminNovoCadastro(usuario: Record<string, unknown>, frontendUrl
         <td style="padding:8px 12px;color:#111827;">${usuario.perfil}</td>
       </tr>
     </table>
-    <a href="${frontendUrl}/usuarios" style="display:inline-block;background:#1c1c2e;color:#f0a500;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:bold;font-size:15px;">Gerenciar Usuários</a>
+    <a href="${frontendUrl}/usuarios" style="display:inline-block;background:#1e3050;color:#f0a500;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:bold;font-size:15px;">Gerenciar Usuários</a>
   `)
 }
 
 function templateUsuarioAprovado(usuario: Record<string, unknown>, frontendUrl: string): string {
   return base(`
-    <h2 style="color:#1c1c2e;margin-top:0;">✅ Acesso Aprovado!</h2>
+    <h2 style="color:#1e3050;margin-top:0;">✅ Acesso Aprovado!</h2>
     <p style="color:#374151;">Olá, <strong>${usuario.nome}</strong>!</p>
     <p style="color:#374151;">Seu cadastro foi <strong style="color:#16a34a;">aprovado</strong>. Você já pode acessar o sistema com seu usuário e senha.</p>
     <div style="text-align:center;margin:24px 0;">
@@ -188,7 +188,7 @@ function templateUsuarioAprovado(usuario: Record<string, unknown>, frontendUrl: 
 
 function templateUsuarioRejeitado(usuario: Record<string, unknown>, motivo?: string): string {
   return base(`
-    <h2 style="color:#1c1c2e;margin-top:0;">Cadastro Não Aprovado</h2>
+    <h2 style="color:#1e3050;margin-top:0;">Cadastro Não Aprovado</h2>
     <p style="color:#374151;">Olá, <strong>${usuario.nome}</strong>!</p>
     <p style="color:#374151;">Infelizmente seu cadastro não foi aprovado neste momento.</p>
     ${motivo ? `<div style="background:#fef2f2;padding:12px 16px;border-left:4px solid #dc2626;margin:16px 0;"><p style="margin:0;color:#374151;"><strong>Motivo:</strong> ${motivo}</p></div>` : ''}
@@ -199,7 +199,7 @@ function templateUsuarioRejeitado(usuario: Record<string, unknown>, motivo?: str
 
 function templateConclusao(os: Record<string, unknown>): string {
   return base(`
-    <h2 style="color:#1c1c2e;margin-top:0;">✅ Serviço Concluído</h2>
+    <h2 style="color:#1e3050;margin-top:0;">✅ Serviço Concluído</h2>
     <p style="color:#374151;">Prezado(a) cliente, informamos que a Ordem de Serviço abaixo foi <strong style="color:#16a34a;">concluída com sucesso</strong>.</p>
     ${tabelaOS(os)}
     <div style="background:#dcfce7;padding:12px 16px;border-left:4px solid #16a34a;margin:16px 0;">

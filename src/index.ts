@@ -107,14 +107,14 @@ function paginaResposta(tipo: string, mensagem: string, titulo?: string): string
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; background: #f3f4f6; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
     .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.1); max-width: 480px; width: 90%; overflow: hidden; }
-    .header { background: #1c1c2e; padding: 28px; text-align: center; }
+    .header { background: #1e3050; padding: 28px; text-align: center; }
     .header h1 { color: #f0a500; font-size: 22px; }
     .header p { color: rgba(255,255,255,.5); font-size: 13px; margin-top: 4px; }
     .body { padding: 36px 32px; text-align: center; }
     .icon { font-size: 56px; margin-bottom: 16px; }
     .titulo { font-size: 22px; font-weight: bold; color: ${cor}; margin-bottom: 12px; }
     .msg { color: #374151; font-size: 15px; line-height: 1.6; }
-    .footer { background: #1c1c2e; padding: 14px; text-align: center; }
+    .footer { background: #1e3050; padding: 14px; text-align: center; }
     .footer p { color: rgba(255,255,255,.3); font-size: 11px; }
   </style>
 </head>
