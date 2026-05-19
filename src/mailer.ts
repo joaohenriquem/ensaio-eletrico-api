@@ -63,6 +63,10 @@ export async function enviarEmailOtp(destinatario: string, nome: string, codigo:
   await enviar(destinatario, 'Seu código de acesso – Ensaio Elétrico', templateOtp(nome, codigo))
 }
 
+export async function enviarEmailResetSenha(destinatario: string, nome: string, link: string) {
+  await enviar(destinatario, 'Redefinição de senha – Ensaio Elétrico', templateResetSenha(nome, link))
+}
+
 export async function enviarEmailCadastroRecebido(usuario: Record<string, unknown>) {
   await enviar(String(usuario.email), 'Cadastro recebido – Ensaio Elétrico', templateCadastroRecebido(usuario))
 }
@@ -151,6 +155,18 @@ function templateOtp(nome: string, codigo: string): string {
       </div>
     </div>
     <p style="color:#6b7280;font-size:13px;">Se você não tentou fazer login, ignore este e-mail.</p>
+  `)
+}
+
+function templateResetSenha(nome: string, link: string): string {
+  return base(`
+    <h2 style="color:#1e3050;margin-top:0;">Redefinição de Senha</h2>
+    <p style="color:#374151;">Olá, <strong>${nome}</strong>!</p>
+    <p style="color:#374151;">Recebemos uma solicitação para redefinir a senha da sua conta. Clique no botão abaixo para criar uma nova senha. O link expira em <strong>30 minutos</strong>.</p>
+    <div style="text-align:center;margin:32px 0;">
+      <a href="${link}" style="display:inline-block;background:#f0a500;color:#1e3050;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:bold;font-size:16px;">Redefinir Senha</a>
+    </div>
+    <p style="color:#6b7280;font-size:13px;">Se você não solicitou a redefinição de senha, ignore este e-mail. Sua senha permanecerá a mesma.</p>
   `)
 }
 

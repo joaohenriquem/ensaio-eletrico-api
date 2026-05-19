@@ -4,6 +4,7 @@ import { verificarSenha, gerarToken, hashSenha, authMiddleware } from '../auth.j
 import type { JwtPayload } from '../auth.js'
 import {
   enviarEmailOtp,
+  enviarEmailResetSenha,
   enviarEmailCadastroRecebido,
   enviarEmailAdminNovoCadastro,
   enviarEmailUsuarioAprovado,
@@ -140,6 +141,59 @@ auth.post('/verify-otp', async (c) => {
       perfil: usuario.perfil,
     },
   })
+})
+
+auth.post('/forgot-password', async (c) => {
+  const { email } = await c.req.json<{ email: string }>()
+  if (!email?.trim()) return c.json({ error: 'E-mail obrigatório' }, 400)
+
+  const usuarios = await listar('usuarios', { email: email.trim().toLowerCase() })
+  // Responde sempre com sucesso para não revelar se o e-mail existe
+  if (usuarios.length === 0) return c.json({ message: 'Se este e-mail estiver cadastrado, você receberá as instruções em breve.' })
+
+  const usuario = usuarios[0]
+  const { createHmac } = await import('crypto')
+  const secret = process.env.JWT_SECRET ?? 'dev-secret'
+  const token = createHmac('sha256', secret)
+    .update(`${usuario._id}:reset:${Date.now()}`)
+    .digest('hex')
+
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString()
+  await atualizar('usuarios', String(usuario._id), { reset_token: token, reset_token_expires_at: expiresAt })
+
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+  const link = `${frontendUrl}/redefinir-senha?token=${token}`
+
+  try {
+    await enviarEmailResetSenha(String(usuario.email), String(usuario.nome), link)
+  } catch (err) {
+    console.error('Erro ao enviar e-mail de reset:', err)
+  }
+
+  return c.json({ message: 'Se este e-mail estiver cadastrado, você receberá as instruções em breve.' })
+})
+
+auth.post('/reset-password', async (c) => {
+  const { token, novaSenha } = await c.req.json<{ token: string; novaSenha: string }>()
+
+  if (!token || !novaSenha) return c.json({ error: 'Dados inválidos' }, 400)
+  if (novaSenha.length < 6) return c.json({ error: 'A senha deve ter no mínimo 6 caracteres' }, 400)
+
+  const usuarios = await listar('usuarios', { reset_token: token })
+  if (usuarios.length === 0) return c.json({ error: 'Link inválido ou já utilizado' }, 400)
+
+  const usuario = usuarios[0]
+  const expiresAt = new Date(String(usuario.reset_token_expires_at)).getTime()
+  if (Date.now() > expiresAt) return c.json({ error: 'Link expirado. Solicite um novo.' }, 400)
+
+  const senhaHash = await hashSenha(novaSenha)
+  await atualizar('usuarios', String(usuario._id), {
+    senha: senhaHash,
+    reset_token: null,
+    reset_token_expires_at: null,
+  })
+
+  return c.json({ message: 'Senha redefinida com sucesso!' })
 })
 
 auth.post('/register', async (c) => {
