@@ -8,8 +8,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function logoSrc(): string {
   try {
-    const data = readFileSync(resolve(__dirname, 'static/logo.jpeg'))
-    return `data:image/jpeg;base64,${data.toString('base64')}`
+    const data = readFileSync(resolve(__dirname, 'static/logo_ensaio_eletrico.png'))
+    return `data:image/png;base64,${data.toString('base64')}`
   } catch {
     return ''
   }
