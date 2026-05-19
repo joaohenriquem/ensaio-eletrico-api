@@ -21,8 +21,8 @@ import { fileURLToPath } from 'url'
 const __dirnameIdx = dirname(fileURLToPath(import.meta.url))
 function logoBase64(): string {
   try {
-    const data = readFileSync(resolve(__dirnameIdx, 'static/logo.jpeg'))
-    return `data:image/jpeg;base64,${data.toString('base64')}`
+    const data = readFileSync(resolve(__dirnameIdx, 'static/logo.png'))
+    return `data:image/png;base64,${data.toString('base64')}`
   } catch { return '' }
 }
 
