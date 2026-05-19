@@ -5,13 +5,17 @@ import { verificarSenha, gerarToken } from '../auth.js'
 const auth = new Hono()
 
 auth.post('/login', async (c) => {
-  const { username, password } = await c.req.json<{ username: string; password: string }>()
+  const { email, username, password } = await c.req.json<{ email?: string; username?: string; password: string }>()
+  const login = String(email ?? username ?? '').trim()
 
-  if (!username || !password) {
-    return c.json({ error: 'Usuário e senha são obrigatórios' }, 400)
+  if (!login || !password) {
+    return c.json({ error: 'E-mail/usuário e senha são obrigatórios' }, 400)
   }
 
-  const usuarios = await listar('usuarios', { username, ativo: true })
+  let usuarios = await listar('usuarios', { email: login })
+  if (usuarios.length === 0) {
+    usuarios = await listar('usuarios', { username: login })
+  }
   if (usuarios.length === 0) {
     return c.json({ error: 'Usuário ou senha inválidos' }, 401)
   }
@@ -24,8 +28,8 @@ auth.post('/login', async (c) => {
 
   const token = await gerarToken({
     id: String(usuario._id),
-    username: String(usuario.username),
-    nome: String(usuario.nome ?? usuario.username),
+    username: String(usuario.email),
+    nome: String(usuario.nome ?? usuario.email),
     perfil: String(usuario.perfil ?? 'Técnico'),
   })
 
@@ -33,7 +37,7 @@ auth.post('/login', async (c) => {
     token,
     user: {
       id: usuario._id,
-      username: usuario.username,
+      email: usuario.email,
       nome: usuario.nome,
       perfil: usuario.perfil,
     },
