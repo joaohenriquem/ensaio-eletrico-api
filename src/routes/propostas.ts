@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { listar, inserir, atualizar, buscarPorId, proximoNumero } from '../db.js'
+import { listar, inserir, atualizar, buscarPorId, proximoNumero, deletar } from '../db.js'
 import { authMiddleware } from '../auth.js'
 import { gerarPdfProposta } from '../pdf/proposta.js'
 
@@ -88,6 +88,12 @@ propostas.put('/:id', async (c) => {
   }
 
   const ok = await atualizar('propostas', c.req.param('id'), body)
+  if (!ok) return c.json({ error: 'Não encontrado' }, 404)
+  return c.json({ ok: true })
+})
+
+propostas.delete('/:id', async (c) => {
+  const ok = await deletar('propostas', c.req.param('id'))
   if (!ok) return c.json({ error: 'Não encontrado' }, 404)
   return c.json({ ok: true })
 })

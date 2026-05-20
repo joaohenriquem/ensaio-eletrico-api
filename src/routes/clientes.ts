@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { listar, inserir, atualizar, buscarPorId } from '../db.js'
+import { listar, inserir, atualizar, buscarPorId, deletar } from '../db.js'
 import { authMiddleware } from '../auth.js'
 
 const clientes = new Hono()
@@ -52,6 +52,12 @@ clientes.post('/', async (c) => {
 clientes.put('/:id', async (c) => {
   const body = await c.req.json<Record<string, unknown>>()
   const ok = await atualizar('clientes', c.req.param('id'), body)
+  if (!ok) return c.json({ error: 'Não encontrado' }, 404)
+  return c.json({ ok: true })
+})
+
+clientes.delete('/:id', async (c) => {
+  const ok = await deletar('clientes', c.req.param('id'))
   if (!ok) return c.json({ error: 'Não encontrado' }, 404)
   return c.json({ ok: true })
 })

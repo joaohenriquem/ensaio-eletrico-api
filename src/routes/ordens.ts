@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { listar, inserir, atualizar, buscarPorId, proximoNumero } from '../db.js'
+import { listar, inserir, atualizar, buscarPorId, proximoNumero, deletar } from '../db.js'
 import { authMiddleware } from '../auth.js'
 import { enviarEmailAprovacao, enviarEmailConclusao } from '../mailer.js'
 
@@ -82,6 +82,12 @@ ordens.post('/:id/email', async (c) => {
     const msg = err instanceof Error ? err.message : 'Erro ao enviar e-mail'
     return c.json({ error: msg }, 500)
   }
+})
+
+ordens.delete('/:id', async (c) => {
+  const ok = await deletar('ordens_servico', c.req.param('id'))
+  if (!ok) return c.json({ error: 'Não encontrado' }, 404)
+  return c.json({ ok: true })
 })
 
 export default ordens
