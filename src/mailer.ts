@@ -7,12 +7,17 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function logoSrc(): string {
-  try {
-    const data = readFileSync(resolve(__dirname, 'static/logo_ensaio_eletrico.png'))
-    return `data:image/png;base64,${data.toString('base64')}`
-  } catch {
-    return ''
+  const tentativas = [
+    [resolve(__dirname, 'static/logo.jpeg'), 'image/jpeg'],
+    [resolve(__dirname, '../src/static/logo.jpeg'), 'image/jpeg'],
+  ]
+  for (const [caminho, mime] of tentativas) {
+    try {
+      const data = readFileSync(caminho)
+      return `data:${mime};base64,${data.toString('base64')}`
+    } catch { continue }
   }
+  return ''
 }
 
 export function gerarTokenAcao(id: string, acao: string): string {
