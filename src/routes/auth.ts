@@ -290,6 +290,52 @@ auth.get('/login-logs', async (c) => {
   })))
 })
 
+auth.put('/usuarios/:id', async (c) => {
+  const user = c.get('user')
+  if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
+    return c.json({ error: 'Acesso restrito a administradores' }, 403)
+  }
+
+  const id = c.req.param('id')
+  const { nome, email, username, perfil, novaSenha } = await c.req.json<{
+    nome?: string
+    email?: string
+    username?: string
+    perfil?: string
+    novaSenha?: string
+  }>()
+
+  const usuario = await buscarPorId('usuarios', id)
+  if (!usuario) return c.json({ error: 'Usuário não encontrado' }, 404)
+
+  const campos: Record<string, unknown> = {}
+  if (nome?.trim()) campos.nome = nome.trim()
+  if (email?.trim()) {
+    const existente = await listar('usuarios', { email: email.trim().toLowerCase() })
+    if (existente.length > 0 && String(existente[0]._id) !== id) {
+      return c.json({ error: 'Este e-mail já está em uso' }, 409)
+    }
+    campos.email = email.trim().toLowerCase()
+  }
+  if (username?.trim()) {
+    const existente = await listar('usuarios', { username: username.trim() })
+    if (existente.length > 0 && String(existente[0]._id) !== id) {
+      return c.json({ error: 'Este usuário já está em uso' }, 409)
+    }
+    campos.username = username.trim()
+  }
+  if (perfil) campos.perfil = perfil
+  if (novaSenha) {
+    if (novaSenha.length < 6) return c.json({ error: 'A senha deve ter no mínimo 6 caracteres' }, 400)
+    campos.senha = await hashSenha(novaSenha)
+  }
+
+  if (Object.keys(campos).length === 0) return c.json({ error: 'Nenhum campo para atualizar' }, 400)
+
+  await atualizar('usuarios', id, campos)
+  return c.json({ message: 'Usuário atualizado com sucesso' })
+})
+
 auth.put('/usuarios/:id/aprovar', async (c) => {
   const user = c.get('user')
   if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
