@@ -72,9 +72,12 @@ function itemLista(doc: PDFKit.PDFDocument, texto: string, prefixo = '•') {
 export async function gerarPdfProposta(proposta: Record<string, unknown>): Promise<Buffer> {
   const assinSrc = String(proposta.assinatura ?? '')
   const assinContratadoSrc = String(proposta.assinatura_contratado ?? '')
-  const [assinBuf, assinContratadoBuf] = await Promise.all([
+  const fotosUrls: string[] = Array.isArray(proposta.fotos) ? (proposta.fotos as string[]) : []
+
+  const [assinBuf, assinContratadoBuf, ...fotosBufs] = await Promise.all([
     assinSrc ? resolverImagem(assinSrc) : Promise.resolve(null),
     assinContratadoSrc ? resolverImagem(assinContratadoSrc) : Promise.resolve(null),
+    ...fotosUrls.map((url) => resolverImagem(url)),
   ])
 
   return new Promise((resolve, reject) => {
@@ -229,6 +232,39 @@ export async function gerarPdfProposta(proposta: Record<string, unknown>): Promi
     // ── OBJETIVO ─────────────────────────────────────────────────────────
     secaoTitulo(doc, 'OBJETIVO DA PROPOSTA')
     corpo(doc, String(proposta.objetivo ?? ''))
+
+    // ── FOTOS / ANEXOS ────────────────────────────────────────────────────
+    const fotosValidas = fotosBufs.filter((b): b is Buffer => b !== null)
+    if (fotosValidas.length > 0) {
+      if (doc.y > 500) doc.addPage()
+      secaoTitulo(doc, 'FOTOS / ANEXOS')
+      const FOTO_W = (LARGURA_PAGINA - 8) / 2
+      const FOTO_H = 160
+      let fx = MARGEM
+      let fy = doc.y
+
+      fotosValidas.forEach((buf, i) => {
+        if (fx + FOTO_W > MARGEM + LARGURA_PAGINA) {
+          fx = MARGEM
+          fy += FOTO_H + 8
+          if (fy + FOTO_H > doc.page.height - doc.page.margins.bottom) {
+            doc.addPage()
+            fy = doc.y
+          }
+        }
+        try {
+          doc.image(buf, fx, fy, { width: FOTO_W, height: FOTO_H, cover: [FOTO_W, FOTO_H] })
+        } catch { /* ignora imagem inválida */ }
+        fx += FOTO_W + 8
+        if ((i + 1) % 2 === 0) {
+          fx = MARGEM
+          fy += FOTO_H + 8
+        }
+      })
+
+      doc.y = fy + (fotosValidas.length % 2 !== 0 ? FOTO_H + 8 : 8)
+      doc.moveDown(0.5)
+    }
 
     // ── SERVIÇOS ─────────────────────────────────────────────────────────
     secaoTitulo(doc, 'SERVIÇOS A SEREM EXECUTADOS')
