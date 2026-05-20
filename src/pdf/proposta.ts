@@ -191,6 +191,7 @@ export async function gerarPdfProposta(proposta: Record<string, unknown>): Promi
     // ── FORMAÇÃO ─────────────────────────────────────────────────────────
     secaoTitulo(doc, 'FORMAÇÃO TÉCNICA E ACADÊMICA')
     const formacao = [
+      'Engenharia Elétrica',
       'Técnico em Eletrotécnica – ETEC',
       'NR-10 Básico e SEP – Segurança em Instalações e Serviços em Eletricidade',
       'NR-33 – Segurança em Espaços Confinados',
