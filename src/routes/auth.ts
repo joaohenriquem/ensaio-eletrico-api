@@ -153,6 +153,19 @@ auth.post('/verify-otp', async (c) => {
 
 auth.use('/me/*', authMiddleware)
 
+auth.get('/me', async (c) => {
+  const user = c.get('user')
+  const usuario = await buscarPorId('usuarios', user.id)
+  if (!usuario) return c.json({ error: 'Usuário não encontrado' }, 404)
+  return c.json({
+    id: usuario._id,
+    username: usuario.username ?? undefined,
+    nome: usuario.nome,
+    perfil: usuario.perfil,
+    foto_url: usuario.foto_url ?? undefined,
+  })
+})
+
 auth.put('/me/foto', async (c) => {
   const user = c.get('user')
   const { foto_url } = await c.req.json<{ foto_url: string }>()
