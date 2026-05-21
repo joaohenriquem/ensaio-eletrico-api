@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { runMigrations } from './migrations.js'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
@@ -137,6 +138,9 @@ function paginaResposta(tipo: string, mensagem: string, titulo?: string): string
 }
 
 const port = Number(process.env.PORT ?? 3001)
-serve({ fetch: app.fetch, port }, () => {
-  console.log(`🔥 Ensaio Elétrico API rodando em http://localhost:${port}`)
+
+runMigrations().then(() => {
+  serve({ fetch: app.fetch, port }, () => {
+    console.log(`🔥 Ensaio Elétrico API rodando em http://localhost:${port}`)
+  })
 })
