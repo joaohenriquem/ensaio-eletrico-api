@@ -135,8 +135,11 @@ auth.post('/verify-otp', async (c) => {
     perfil: String(usuario.perfil ?? 'Técnico'),
   })
 
+  const trocarSenha = usuario.trocar_senha === true
+
   return c.json({
     token,
+    trocarSenha,
     user: {
       id: usuario._id,
       email: usuario.email ?? undefined,
@@ -145,6 +148,27 @@ auth.post('/verify-otp', async (c) => {
       perfil: usuario.perfil,
     },
   })
+})
+
+auth.post('/change-password', async (c) => {
+  const header = c.req.header('Authorization')
+  if (!header?.startsWith('Bearer ')) return c.json({ error: 'Não autorizado' }, 401)
+  const token = header.slice(7)
+  let payload: { id: string } | null = null
+  try {
+    payload = await import('../auth.js').then(m => m.verificarToken(token)) as { id: string }
+  } catch {
+    return c.json({ error: 'Token inválido' }, 401)
+  }
+
+  const { novaSenha } = await c.req.json<{ novaSenha: string }>()
+  if (!novaSenha || novaSenha.length < 6) {
+    return c.json({ error: 'A senha deve ter no mínimo 6 caracteres' }, 400)
+  }
+
+  const senhaHash = await hashSenha(novaSenha)
+  await atualizar('usuarios', payload.id, { senha: senhaHash, trocar_senha: false })
+  return c.json({ message: 'Senha alterada com sucesso' })
 })
 
 auth.post('/forgot-password', async (c) => {
@@ -297,12 +321,13 @@ auth.put('/usuarios/:id', async (c) => {
   }
 
   const id = c.req.param('id')
-  const { nome, email, username, perfil, novaSenha } = await c.req.json<{
+  const { nome, email, username, perfil, novaSenha, trocar_senha } = await c.req.json<{
     nome?: string
     email?: string
     username?: string
     perfil?: string
     novaSenha?: string
+    trocar_senha?: boolean
   }>()
 
   const usuario = await buscarPorId('usuarios', id)
@@ -329,6 +354,7 @@ auth.put('/usuarios/:id', async (c) => {
     if (novaSenha.length < 6) return c.json({ error: 'A senha deve ter no mínimo 6 caracteres' }, 400)
     campos.senha = await hashSenha(novaSenha)
   }
+  if (trocar_senha !== undefined) campos.trocar_senha = trocar_senha
 
   if (Object.keys(campos).length === 0) return c.json({ error: 'Nenhum campo para atualizar' }, 400)
 
