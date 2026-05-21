@@ -146,8 +146,19 @@ auth.post('/verify-otp', async (c) => {
       username: usuario.username ?? undefined,
       nome: usuario.nome,
       perfil: usuario.perfil,
+      foto_url: usuario.foto_url ?? undefined,
     },
   })
+})
+
+auth.use('/me/*', authMiddleware)
+
+auth.put('/me/foto', async (c) => {
+  const user = c.get('user')
+  const { foto_url } = await c.req.json<{ foto_url: string }>()
+  if (!foto_url) return c.json({ error: 'URL da foto obrigatória' }, 400)
+  await atualizar('usuarios', user.id, { foto_url })
+  return c.json({ message: 'Foto atualizada', foto_url })
 })
 
 auth.post('/change-password', async (c) => {
@@ -293,6 +304,7 @@ auth.get('/usuarios', async (c) => {
       username: u.username,
       perfil: u.perfil,
       status: u.status ?? 'aprovado',
+      foto_url: u.foto_url ?? undefined,
       criado_em: u.criado_em,
     }))
   )
@@ -321,13 +333,14 @@ auth.put('/usuarios/:id', async (c) => {
   }
 
   const id = c.req.param('id')
-  const { nome, email, username, perfil, novaSenha, trocar_senha } = await c.req.json<{
+  const { nome, email, username, perfil, novaSenha, trocar_senha, foto_url } = await c.req.json<{
     nome?: string
     email?: string
     username?: string
     perfil?: string
     novaSenha?: string
     trocar_senha?: boolean
+    foto_url?: string
   }>()
 
   const usuario = await buscarPorId('usuarios', id)
@@ -355,6 +368,7 @@ auth.put('/usuarios/:id', async (c) => {
     campos.senha = await hashSenha(novaSenha)
   }
   if (trocar_senha !== undefined) campos.trocar_senha = trocar_senha
+  if (foto_url !== undefined) campos.foto_url = foto_url
 
   if (Object.keys(campos).length === 0) return c.json({ error: 'Nenhum campo para atualizar' }, 400)
 
