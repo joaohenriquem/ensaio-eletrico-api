@@ -326,6 +326,47 @@ auth.get('/login-logs', async (c) => {
   })))
 })
 
+auth.post('/usuarios', async (c) => {
+  const user = c.get('user')
+  if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
+    return c.json({ error: 'Acesso restrito a administradores' }, 403)
+  }
+
+  const { nome, email, username, senha, perfil, trocar_senha } = await c.req.json<{
+    nome: string
+    email: string
+    username: string
+    senha: string
+    perfil?: string
+    trocar_senha?: boolean
+  }>()
+
+  if (!nome?.trim() || !email?.trim() || !username?.trim() || !senha) {
+    return c.json({ error: 'Nome, e-mail, usuário e senha são obrigatórios' }, 400)
+  }
+  if (senha.length < 6) return c.json({ error: 'A senha deve ter no mínimo 6 caracteres' }, 400)
+
+  const [emailEx, usernameEx] = await Promise.all([
+    listar('usuarios', { email: email.trim().toLowerCase() }),
+    listar('usuarios', { username: username.trim() }),
+  ])
+  if (emailEx.length > 0) return c.json({ error: 'Este e-mail já está cadastrado' }, 409)
+  if (usernameEx.length > 0) return c.json({ error: 'Este usuário já está em uso' }, 409)
+
+  const senhaHash = await hashSenha(senha)
+  const id = await inserir('usuarios', {
+    nome: nome.trim(),
+    email: email.trim().toLowerCase(),
+    username: username.trim(),
+    senha: senhaHash,
+    perfil: perfil ?? 'Técnico',
+    status: 'aprovado',
+    trocar_senha: trocar_senha ?? true,
+  })
+
+  return c.json({ id, message: 'Usuário criado com sucesso' }, 201)
+})
+
 auth.put('/usuarios/:id', async (c) => {
   const user = c.get('user')
   if (user.perfil !== 'Administrador' && user.perfil !== 'Admin') {
