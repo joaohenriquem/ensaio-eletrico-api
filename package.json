@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && cp -r src/static dist/static",
-    "start": "node dist/index.js"
+    "start": "node --dns-result-order=ipv4first dist/index.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1049.0",
