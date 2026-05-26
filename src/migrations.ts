@@ -1,21 +1,4 @@
-import { testarConexao } from './db.js'
-import pg from 'pg'
-
-const { Pool } = pg
-
-async function getPool(): Promise<pg.Pool> {
-  const url = process.env.DATABASE_URL
-  if (!url) throw new Error('DATABASE_URL não configurada')
-  const parsed = new URL(url)
-  return new Pool({
-    host: parsed.hostname,
-    port: Number(parsed.port || 5432),
-    user: decodeURIComponent(parsed.username),
-    password: decodeURIComponent(parsed.password),
-    database: parsed.pathname.slice(1),
-    ssl: { rejectUnauthorized: false },
-  })
-}
+import { pool } from './db.js'
 
 const migrations: { name: string; sql: string }[] = [
   {
@@ -48,8 +31,8 @@ const migrations: { name: string; sql: string }[] = [
 ]
 
 export async function runMigrations(): Promise<void> {
-  const pool = await getPool()
-  const client = await pool.connect()
+  const p = await pool()
+  const client = await p.connect()
   try {
     await client.query(`
       CREATE TABLE IF NOT EXISTS _migrations (
@@ -71,6 +54,5 @@ export async function runMigrations(): Promise<void> {
     console.error('[migration] error:', err)
   } finally {
     client.release()
-    await pool.end()
   }
 }

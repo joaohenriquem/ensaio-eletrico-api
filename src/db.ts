@@ -34,7 +34,7 @@ async function resolveHost(host: string): Promise<string> {
   return host
 }
 
-async function pool(): Promise<pg.Pool> {
+export async function pool(): Promise<pg.Pool> {
   if (!_pool) {
     const url = process.env.DATABASE_URL
     if (!url) throw new Error('DATABASE_URL não configurada')
