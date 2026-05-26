@@ -139,8 +139,10 @@ function paginaResposta(tipo: string, mensagem: string, titulo?: string): string
 
 const port = Number(process.env.PORT ?? 3001)
 
-runMigrations().then(() => {
-  serve({ fetch: app.fetch, port }, () => {
-    console.log(`🔥 Ensaio Elétrico API rodando em http://localhost:${port}`)
+runMigrations()
+  .catch((err) => console.error('[migration] falhou, continuando sem migrations:', err))
+  .finally(() => {
+    serve({ fetch: app.fetch, port }, () => {
+      console.log(`🔥 Ensaio Elétrico API rodando em http://localhost:${port}`)
+    })
   })
-})

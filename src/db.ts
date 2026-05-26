@@ -18,15 +18,12 @@ function parseDatabaseUrl(url: string) {
 }
 
 async function resolveHost(host: string): Promise<string> {
-  if (/^[0-9.]+$/.test(host) || /^[0-9a-fA-F:]+$/.test(host)) {
-    return host
-  }
+  if (/^[0-9.]+$/.test(host)) return host // já é IPv4
+  if (host.includes(':')) return host       // já é IPv6 literal
 
   try {
-    const addresses = await dns.promises.lookup(host, { family: 4, all: true })
-    if (addresses.length > 0) {
-      return addresses[0].address
-    }
+    const addresses = await dns.promises.resolve4(host)
+    if (addresses.length > 0) return addresses[0]
   } catch {
     // fallback para host original
   }
