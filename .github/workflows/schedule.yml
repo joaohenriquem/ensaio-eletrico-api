@@ -13,7 +13,7 @@ jobs:
       - name: Suspender API
         run: |
           curl -s -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/suspend" \
-            -H "Authorization: Bearer ${{ secrets.github_suspend }}" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json"
 
   reativar:
@@ -23,5 +23,5 @@ jobs:
       - name: Reativar API
         run: |
           curl -s -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/resume" \
-            -H "Authorization: Bearer ${{ secrets.github_suspend }}" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
             -H "Content-Type: application/json"
