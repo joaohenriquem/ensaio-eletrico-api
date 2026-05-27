@@ -77,7 +77,7 @@ app.get('/api/ordens/:id/resposta', async (c) => {
   const os = await buscarPorId('ordens_servico', id)
   if (!os) return c.html(paginaResposta('erro', 'Ordem de Serviço não encontrada.'))
 
-  const novoStatus = acao === 'aprovar' ? 'aprovada' : 'cancelada'
+  const novoStatus = acao === 'aprovar' ? 'aprovada' : 'reprovada'
   await atualizar('ordens_servico', id, { status: novoStatus })
 
   const titulo = acao === 'aprovar' ? '✅ OS Aprovada!' : '❌ OS Reprovada'
