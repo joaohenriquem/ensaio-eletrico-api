@@ -111,13 +111,20 @@ function base(conteudo: string): string {
     </div>`
 }
 
+function formatarData(data: unknown): string {
+  if (!data) return '–'
+  const d = new Date(String(data))
+  if (isNaN(d.getTime())) return String(data)
+  return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 function tabelaOS(os: Record<string, unknown>): string {
   const linhas = [
     ['Número', os.numero],
     ['Cliente', os.cliente_nome],
     ['Tipo de Serviço', os.tipo],
     ['Local', os.local || '–'],
-    ['Data', os.data],
+    ['Data', formatarData(os.data)],
     ['Técnico', os.tecnico || '–'],
   ]
   const rows = linhas
