@@ -217,9 +217,19 @@ export async function contar(
 
 export async function proximoNumero(tabela: string, prefixo: string): Promise<string> {
   const ano = new Date().getFullYear()
-  const total = await contar(tabela)
-  const seq = String(total + 1).padStart(3, '0')
-  return `${prefixo}-${ano}-${seq}`
+  const client = await (await pool()).connect()
+  try {
+    const res = await client.query(
+      `SELECT numero FROM ${tabela} WHERE numero LIKE $1 ORDER BY numero DESC LIMIT 1`,
+      [`${prefixo}-${ano}-%`]
+    )
+    if (res.rows.length === 0) return `${prefixo}-${ano}-001`
+    const ultimo = String(res.rows[0].numero)
+    const seq = parseInt(ultimo.split('-').pop() ?? '0', 10) + 1
+    return `${prefixo}-${ano}-${String(seq).padStart(3, '0')}`
+  } finally {
+    client.release()
+  }
 }
 
 export async function testarConexao(): Promise<boolean> {
