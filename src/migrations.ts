@@ -28,6 +28,13 @@ const migrations: { name: string; sql: string }[] = [
         ADD COLUMN IF NOT EXISTS fotos TEXT;
     `,
   },
+  {
+    name: 'ordens_valor',
+    sql: `
+      ALTER TABLE ordens_servico
+        ADD COLUMN IF NOT EXISTS valor NUMERIC(10,2);
+    `,
+  },
 ]
 
 export async function runMigrations(): Promise<void> {

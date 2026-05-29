@@ -119,13 +119,17 @@ function formatarData(data: unknown): string {
 }
 
 function tabelaOS(os: Record<string, unknown>): string {
-  const linhas = [
+  const valorFmt = os.valor
+    ? Number(os.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : null
+  const linhas: [string, unknown][] = [
     ['Número', os.numero],
     ['Cliente', os.cliente_nome],
     ['Tipo de Serviço', os.tipo],
     ['Local', os.local || '–'],
     ['Data', formatarData(os.data)],
     ['Técnico', os.tecnico || '–'],
+    ...(valorFmt ? [['Valor', valorFmt] as [string, string]] : []),
   ]
   const rows = linhas
     .map(([k, v], i) =>
