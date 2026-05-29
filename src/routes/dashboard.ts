@@ -19,7 +19,7 @@ dashboard.get('/stats', async (c) => {
     distribuicaoPropostas,
   ] = await Promise.all([
     contar('clientes', { ativo: true }),
-    contar('ordens_servico', { status: { $in: ['aberta', 'em_andamento'] } }),
+    contar('ordens_servico', { status: { $in: ['aberta', 'em_andamento', 'aprovada'] } }),
     contar('ordens_servico', { status: 'concluida' }),
     contar('relatorios'),
     contar('propostas'),
