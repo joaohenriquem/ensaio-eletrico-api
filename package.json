@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc && cp -r src/static dist/static",
-    "start": "node --dns-result-order=ipv4first dist/index.js"
+    "start": "node --dns-result-order=ipv4first dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1049.0",
@@ -27,8 +30,10 @@
     "@types/nodemailer": "^8.0.0",
     "@types/pdfkit": "^0.13.6",
     "@types/pg": "^8.11.10",
+    "@vitest/coverage-v8": "^4.1.7",
     "esbuild": "^0.24.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.7"
   }
 }
