@@ -14,11 +14,11 @@ export async function verificarSenha(senha: string, hash: string): Promise<boole
   return bcrypt.compare(senha, hash)
 }
 
-export async function gerarToken(payload: { id: string; username: string; nome: string; perfil: string }): Promise<string> {
+export async function gerarToken(payload: { id: string; username: string; nome: string; perfil: string }, lembrar = false): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('8h')
+    .setExpirationTime(lembrar ? '7d' : '8h')
     .sign(JWT_SECRET)
 }
 

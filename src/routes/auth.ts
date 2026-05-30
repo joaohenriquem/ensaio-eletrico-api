@@ -83,11 +83,12 @@ auth.post('/login', async (c) => {
 })
 
 auth.post('/verify-otp', async (c) => {
-  const { userId, otp, latitude, longitude } = await c.req.json<{
+  const { userId, otp, latitude, longitude, lembrar } = await c.req.json<{
     userId: string
     otp: string
     latitude?: number
     longitude?: number
+    lembrar?: boolean
   }>()
 
   if (!userId || !otp) {
@@ -133,7 +134,7 @@ auth.post('/verify-otp', async (c) => {
     username: loginValue,
     nome: nomeValue,
     perfil: String(usuario.perfil ?? 'Técnico'),
-  })
+  }, lembrar === true)
 
   const trocarSenha = usuario.trocar_senha === true
 
@@ -149,6 +150,18 @@ auth.post('/verify-otp', async (c) => {
       foto_url: usuario.foto_url ?? undefined,
     },
   })
+})
+
+auth.use('/refresh', authMiddleware)
+auth.post('/refresh', async (c) => {
+  const user = c.get('user')
+  const token = await gerarToken({
+    id: user.id,
+    username: user.username,
+    nome: user.nome,
+    perfil: user.perfil,
+  }, true)
+  return c.json({ token })
 })
 
 auth.use('/me/*', authMiddleware)
