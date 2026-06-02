@@ -3,7 +3,8 @@ name: Reativar API (08:30 BRT)
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 11 * * *'  # 08:30 BRT
+    - cron: '0 7 * * *'    # 04:00 BRT — disparo antecipado (atraso GitHub ~3-5h → acorda até 09:00 BRT)
+    - cron: '30 11 * * *'  # 08:30 BRT — backup caso o primeiro atrase demais
 
 jobs:
   reativar:
