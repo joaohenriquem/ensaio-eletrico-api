@@ -12,7 +12,7 @@ import ordensRoutes from './routes/ordens.js'
 import relatoriosRoutes from './routes/relatorios.js'
 import propostasRoutes from './routes/propostas.js'
 import uploadsRoutes from './routes/uploads.js'
-import { buscarPorId, atualizar, testarConexao } from './db.js'
+import { buscarPorId, atualizar, testarConexao, contar } from './db.js'
 import { monitorMiddleware, recordError, getLogs, getLogSummary } from './monitor.js'
 import { gerarTokenAcao } from './mailer.js'
 import { readFileSync } from 'fs'
@@ -54,7 +54,14 @@ app.onError((err, c) => {
 
 app.get('/api/health', async (c) => {
   const dbOk = await testarConexao()
-  return c.json({ ok: dbOk, ts: new Date().toISOString(), db: dbOk ? 'ok' : 'unreachable' }, dbOk ? 200 : 503)
+  if (!dbOk) return c.json({ ok: false, ts: new Date().toISOString(), db: 'unreachable' }, 503)
+  const [clientes, ordens, propostas, relatorios] = await Promise.all([
+    contar('clientes'),
+    contar('ordens'),
+    contar('propostas'),
+    contar('relatorios'),
+  ])
+  return c.json({ ok: true, ts: new Date().toISOString(), db: 'ok', counts: { clientes, ordens, propostas, relatorios } })
 })
 
 app.get('/api/logs', (c) => c.json({ summary: getLogSummary(), logs: getLogs() }))
