@@ -57,7 +57,7 @@ app.get('/api/health', async (c) => {
   if (!dbOk) return c.json({ ok: false, ts: new Date().toISOString(), db: 'unreachable' }, 503)
   const [clientes, ordens, propostas, relatorios] = await Promise.all([
     contar('clientes'),
-    contar('ordens'),
+    contar('ordens_servico'),
     contar('propostas'),
     contar('relatorios'),
   ])
