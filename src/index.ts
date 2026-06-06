@@ -53,15 +53,16 @@ app.onError((err, c) => {
 })
 
 app.get('/api/health', async (c) => {
+  const ts = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
   const dbOk = await testarConexao()
-  if (!dbOk) return c.json({ ok: false, ts: new Date().toISOString(), db: 'unreachable' }, 503)
+  if (!dbOk) return c.json({ ok: false, ts, db: 'unreachable' }, 503)
   const [clientes, ordens, propostas, relatorios] = await Promise.all([
     contar('clientes'),
     contar('ordens_servico'),
     contar('propostas'),
     contar('relatorios'),
   ])
-  return c.json({ ok: true, ts: new Date().toISOString(), db: 'ok', counts: { clientes, ordens, propostas, relatorios } })
+  return c.json({ ok: true, ts, db: 'ok', counts: { clientes, ordens, propostas, relatorios } })
 })
 
 app.get('/api/logs', (c) => c.json({ summary: getLogSummary(), logs: getLogs() }))
