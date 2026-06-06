@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { listar, inserir, atualizar, buscarPorId, proximoNumero, deletar } from '../db.js'
 import { authMiddleware } from '../auth.js'
 import { gerarPdfProposta } from '../pdf/proposta.js'
+import { dataHojeBR } from '../helpers.js'
 
 const propostas = new Hono()
 
@@ -57,7 +58,7 @@ propostas.post('/', async (c) => {
     cliente_id: body.cliente_id ?? null,
     cliente_nome: body.cliente_nome,
     cliente_endereco: body.cliente_endereco ?? '',
-    data: body.data ?? new Date().toISOString().split('T')[0],
+    data: body.data ?? dataHojeBR(),
     descricao: body.descricao,
     objetivo: body.objetivo ?? '',
     servicos: body.servicos ?? [],

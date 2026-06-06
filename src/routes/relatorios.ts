@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { listar, inserir, atualizar, buscarPorId, proximoNumero, deletar } from '../db.js'
 import { authMiddleware } from '../auth.js'
 import { gerarPdfRelatorio } from '../pdf/relatorio.js'
+import { dataHojeBR } from '../helpers.js'
 
 const relatorios = new Hono()
 
@@ -51,7 +52,7 @@ relatorios.post('/', async (c) => {
     cliente_nome: body.cliente_nome,
     local: body.local,
     endereco: body.endereco ?? '',
-    data: body.data ?? new Date().toISOString().split('T')[0],
+    data: body.data ?? dataHojeBR(),
     tecnico: body.tecnico ?? 'Amauri Biato',
     cft: body.cft ?? '38346090803',
     trt: body.trt ?? '',

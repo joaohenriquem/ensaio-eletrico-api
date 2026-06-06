@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { listar, inserir, atualizar, buscarPorId, proximoNumero, deletar } from '../db.js'
 import { authMiddleware } from '../auth.js'
 import { enviarEmailAprovacao, enviarEmailConclusao } from '../mailer.js'
+import { dataHojeBR } from '../helpers.js'
 
 const ordens = new Hono()
 
@@ -36,7 +37,7 @@ ordens.post('/', async (c) => {
     cliente_nome: body.cliente_nome,
     tipo: body.tipo ?? 'Manutenção Preventiva',
     status: body.status ?? 'aberta',
-    data: body.data ?? new Date().toISOString().split('T')[0],
+    data: body.data ?? dataHojeBR(),
     tecnico: body.tecnico ?? 'Amauri Biato',
     local: body.local ?? '',
     prioridade: body.prioridade ?? 'Normal',
