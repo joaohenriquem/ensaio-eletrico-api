@@ -147,6 +147,12 @@ function paginaResposta(tipo: string, mensagem: string, titulo?: string): string
 
 const port = Number(process.env.PORT ?? 3001)
 
+// Pinga o banco a cada 6h para evitar que o Supabase pause por inatividade
+setInterval(async () => {
+  const ok = await testarConexao()
+  if (!ok) console.warn('[keep-alive] banco inacessível')
+}, 6 * 60 * 60 * 1000)
+
 runMigrations()
   .catch((err) => console.error('[migration] falhou, continuando sem migrations:', err))
   .finally(() => {
