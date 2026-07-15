@@ -3,6 +3,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { EMPRESA } from '../constants.js'
 import { dataBr, formatarMoeda } from '../helpers.js'
+import { desenharCapa } from './capa.js'
 
 async function resolverImagem(src: string): Promise<Buffer | null> {
   if (!src) return null
@@ -105,69 +106,13 @@ export async function gerarPdfProposta(proposta: Record<string, unknown>): Promi
       : []
 
     // ── CAPA ─────────────────────────────────────────────────────────────
-    const capaTopo = doc.y
-    const boxH = 64
-
-    // Fundo escuro
-    doc.rect(MARGEM, capaTopo, LARGURA_PAGINA, boxH).fill(COR_ESCURO)
-
-    // Logo à esquerda
-    doc.image(LOGO_PATH, MARGEM + 8, capaTopo + 10, { height: 44 })
-
-    // Nome da empresa e tipo de documento centralizados
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(20)
-      .fillColor(COR_AMARELO)
-      .text('ENSAIO ELÉTRICO', MARGEM, capaTopo + 12, { width: LARGURA_PAGINA, align: 'center' })
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(11)
-      .fillColor(COR_BRANCO)
-      .text('PROPOSTA TÉCNICA COMERCIAL', MARGEM, capaTopo + 38, {
-        width: LARGURA_PAGINA,
-        align: 'center',
-      })
-
-    doc.y = capaTopo + boxH + 8
-
-    // Subtítulo serviço
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(13)
-      .fillColor(COR_ESCURO)
-      .text(String(proposta.descricao ?? ''), { align: 'center', width: LARGURA_PAGINA })
-    doc.moveDown(0.5)
-
-    // Dados de identificação — sem posicionamento absoluto para evitar sobreposição
-    const rotulos = ['Cliente:', 'Endereço:', 'Data:', 'Proposta:']
-    const valores = [
-      String(proposta.cliente_nome ?? ''),
-      String(proposta.cliente_endereco ?? ''),
-      dataBr(proposta.data as string | Date),
-      String(proposta.numero ?? ''),
-    ]
-    rotulos.forEach((rot, i) => {
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(10)
-        .fillColor(COR_ESCURO)
-        .text(rot, MARGEM, doc.y, { continued: true, width: 72 })
-      doc
-        .font('Helvetica')
-        .fontSize(10)
-        .fillColor('#111')
-        .text(valores[i], { width: LARGURA_PAGINA - 72 })
+    desenharCapa(doc, {
+      titulo: 'PROPOSTA DE PROJETO ELÉTRICO',
+      subtitulo: String(proposta.descricao ?? ''),
+      cliente: String(proposta.cliente_nome ?? ''),
+      local: String(proposta.cliente_endereco ?? ''),
     })
-
-    doc.moveDown(0.3)
-    doc
-      .moveTo(MARGEM, doc.y)
-      .lineTo(MARGEM + LARGURA_PAGINA, doc.y)
-      .strokeColor(COR_AMARELO)
-      .lineWidth(1.5)
-      .stroke()
-    doc.moveDown(0.6)
+    doc.addPage()
 
     // ── RESUMO PROFISSIONAL ───────────────────────────────────────────────
     secaoTitulo(doc, 'RESUMO PROFISSIONAL')

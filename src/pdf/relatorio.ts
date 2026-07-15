@@ -10,6 +10,7 @@ import { dataBr } from '../helpers.js'
 import { readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { desenharCapa } from './capa.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -324,8 +325,13 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
     const normas: string[] = Array.isArray(relatorio.normas)
       ? (relatorio.normas as string[]) : []
 
-    // dispara cabeçalho da primeira página manualmente
-    cabecalhoPagina(doc, dataStr, local)
+    // ── CAPA ─────────────────────────────────────────────────────────────
+    desenharCapa(doc, {
+      titulo: 'RELATÓRIO DE MANUTENÇÃO PREVENTIVA',
+      cliente: String(relatorio.cliente_nome ?? ''),
+      local,
+    })
+    doc.addPage()
 
     // ── SUMÁRIO ──────────────────────────────────────────────────────────────
     secaoTitulo(doc, '1. SUMÁRIO:')
