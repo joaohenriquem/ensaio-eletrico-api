@@ -2,7 +2,12 @@ import dns from 'dns'
 import pg from 'pg'
 import { CAMPOS_JSONB } from './constants.js'
 
-const { Pool } = pg
+const { Pool, types } = pg
+
+// Mantém colunas DATE como string 'YYYY-MM-DD' (sem conversão para Date/UTC).
+// O parser padrão do pg criaria um Date à meia-noite UTC, que ao formatar em
+// America/Sao_Paulo (UTC-3) recua um dia — ex: 15/07 vira 14/07.
+types.setTypeParser(1082, (val: string) => val)
 
 let _pool: pg.Pool | null = null
 
