@@ -51,8 +51,7 @@ export function desenharCapa(doc: PDFKit.PDFDocument, opts: CapaOpts) {
 
   y += 40
   const CAMPO_X = MARGEM + 60
-  const LABEL_W = 60
-  const LINHA_W = LARGURA_PAGINA - 120 - LABEL_W
+  const CAMPO_W = LARGURA_PAGINA - 120
 
   const campos: [string, string][] = [
     ['Cliente:', opts.cliente],
@@ -60,19 +59,21 @@ export function desenharCapa(doc: PDFKit.PDFDocument, opts: CapaOpts) {
     ['Data:', dataBr(new Date())],
   ]
 
+  // Rótulo em cima e valor embaixo — evita sobreposição quando o valor
+  // (nome do cliente, endereço) é longo e quebra em várias linhas.
   campos.forEach(([rotulo, valor]) => {
     doc
       .font('Helvetica-Bold')
       .fontSize(10.5)
       .fillColor(COR_ESCURO)
-      .text(rotulo, CAMPO_X, y, { continued: true, width: LABEL_W })
+      .text(rotulo, CAMPO_X, y, { width: CAMPO_W })
     doc
       .font('Helvetica')
       .fontSize(10.5)
       .fillColor('#111')
-      .text(` ${valor}`, { width: LINHA_W })
+      .text(valor, CAMPO_X, doc.y + 1, { width: CAMPO_W })
 
-    y += 34
+    y = doc.y + 16
   })
 
   doc
