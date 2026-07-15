@@ -72,13 +72,6 @@ export function desenharCapa(doc: PDFKit.PDFDocument, opts: CapaOpts) {
       .fillColor('#111')
       .text(` ${valor}`, { width: LINHA_W })
 
-    doc
-      .moveTo(CAMPO_X + LABEL_W, y + 15)
-      .lineTo(CAMPO_X + LABEL_W + LINHA_W, y + 15)
-      .strokeColor('#bbb')
-      .lineWidth(0.5)
-      .stroke()
-
     y += 34
   })
 
