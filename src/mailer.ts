@@ -72,6 +72,10 @@ export async function enviarEmailResetSenha(destinatario: string, nome: string, 
   await enviar(destinatario, 'Redefinição de senha – Ensaio Elétrico', templateResetSenha(nome, link))
 }
 
+export async function enviarEmailAssinaturaContrato(contrato: Record<string, unknown>, destinatario: string, link: string) {
+  await enviar(destinatario, `[${contrato.numero}] Contrato para Assinatura – Ensaio Elétrico`, templateAssinaturaContrato(contrato, link))
+}
+
 export async function enviarEmailCadastroRecebido(usuario: Record<string, unknown>) {
   await enviar(String(usuario.email), 'Cadastro recebido – Ensaio Elétrico', templateCadastroRecebido(usuario))
 }
@@ -183,6 +187,37 @@ function templateResetSenha(nome: string, link: string): string {
       <a href="${link}" style="display:inline-block;background:#f0a500;color:#1e3050;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:bold;font-size:16px;">Redefinir Senha</a>
     </div>
     <p style="color:#6b7280;font-size:13px;">Se você não solicitou a redefinição de senha, ignore este e-mail. Sua senha permanecerá a mesma.</p>
+  `)
+}
+
+function templateAssinaturaContrato(contrato: Record<string, unknown>, link: string): string {
+  const valorFmt = contrato.valor_total
+    ? Number(contrato.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : '–'
+  const linhas: [string, unknown][] = [
+    ['Número', contrato.numero],
+    ['Cliente', contrato.cliente_nome],
+    ['Objeto', 'Manutenção preventiva em painéis elétricos'],
+    ['Valor', valorFmt],
+    ['Vigência', `${contrato.vigencia_meses ?? '–'} meses`],
+  ]
+  const rows = linhas
+    .map(([k, v], i) =>
+      `<tr style="background:${i % 2 === 0 ? '#f9fafb' : '#ffffff'}">
+        <td style="padding:8px 12px;font-weight:bold;color:#374151;width:40%;">${k}</td>
+        <td style="padding:8px 12px;color:#111827;">${v}</td>
+      </tr>`
+    )
+    .join('')
+  return base(`
+    <h2 style="color:#1e3050;margin-top:0;">Contrato para Assinatura</h2>
+    <p style="color:#374151;">Prezado(a) cliente, segue abaixo o contrato de manutenção preventiva para sua análise e assinatura digital:</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">${rows}</table>
+    <div style="text-align:center;margin:32px 0;">
+      <a href="${link}" style="display:inline-block;background:#f0a500;color:#1e3050;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:bold;font-size:16px;">✍️ Revisar e Assinar Contrato</a>
+    </div>
+    <p style="color:#6b7280;font-size:13px;">No link acima você poderá baixar o contrato completo em PDF e assinar digitalmente.</p>
+    <p style="color:#6b7280;font-size:12px;">Dúvidas: 📞 (11) 92137-4849 / (11) 98521-9614</p>
   `)
 }
 

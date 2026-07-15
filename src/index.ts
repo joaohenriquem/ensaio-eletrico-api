@@ -11,6 +11,7 @@ import clientesRoutes from './routes/clientes.js'
 import ordensRoutes from './routes/ordens.js'
 import relatoriosRoutes from './routes/relatorios.js'
 import propostasRoutes from './routes/propostas.js'
+import contratosRoutes from './routes/contratos.js'
 import uploadsRoutes from './routes/uploads.js'
 import { buscarPorId, atualizar, testarConexao, contar } from './db.js'
 import { monitorMiddleware, recordError, getLogs, getLogSummary } from './monitor.js'
@@ -102,6 +103,7 @@ app.route('/api/clientes', clientesRoutes)
 app.route('/api/ordens', ordensRoutes)
 app.route('/api/relatorios', relatoriosRoutes)
 app.route('/api/propostas', propostasRoutes)
+app.route('/api/contratos', contratosRoutes)
 app.route('/api/uploads', uploadsRoutes)
 
 function paginaResposta(tipo: string, mensagem: string, titulo?: string): string {

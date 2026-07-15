@@ -35,6 +35,43 @@ const migrations: { name: string; sql: string }[] = [
         ADD COLUMN IF NOT EXISTS valor NUMERIC(10,2);
     `,
   },
+  {
+    name: 'contratos',
+    sql: `
+      CREATE TABLE IF NOT EXISTS contratos (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        numero TEXT,
+        cliente_id TEXT,
+        cliente_nome TEXT NOT NULL,
+        cliente_endereco TEXT,
+        data DATE,
+        qtd_paineis INTEGER,
+        locais_paineis TEXT,
+        periodicidade TEXT,
+        qtd_manutencoes INTEGER,
+        valor_total NUMERIC(12,2),
+        forma_pagamento TEXT,
+        vigencia_meses INTEGER,
+        data_inicio DATE,
+        data_fim DATE,
+        taxa_visita NUMERIC(10,2),
+        cronograma_tempo TEXT,
+        cronograma_horario TEXT,
+        responsavel_tecnico TEXT,
+        cft TEXT,
+        guid TEXT,
+        assinatura_contratada TEXT,
+        nome_contratada TEXT,
+        assinado_contratada_em TIMESTAMPTZ,
+        assinatura_contratante TEXT,
+        nome_contratante TEXT,
+        assinado_contratante_em TIMESTAMPTZ,
+        status TEXT DEFAULT 'rascunho',
+        criado_em TIMESTAMPTZ,
+        atualizado_em TIMESTAMPTZ
+      );
+    `,
+  },
 ]
 
 export async function runMigrations(): Promise<void> {
