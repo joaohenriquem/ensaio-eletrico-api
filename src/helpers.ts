@@ -20,6 +20,23 @@ export function dataBr(dt: string | Date | null | undefined): string {
   return String(dt)
 }
 
+export async function reverseGeocode(lat: number, lon: number): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+      { headers: { 'User-Agent': 'EnsaioEletrico/2.0' } }
+    )
+    const data = await res.json() as { display_name?: string; address?: { city?: string; town?: string; state?: string; country?: string } }
+    const a = data.address ?? {}
+    const cidade = a.city ?? a.town ?? ''
+    const estado = a.state ?? ''
+    const pais = a.country ?? ''
+    return [cidade, estado, pais].filter(Boolean).join(', ') || data.display_name || ''
+  } catch {
+    return ''
+  }
+}
+
 export interface PainelChecklist {
   [key: string]: string
 }

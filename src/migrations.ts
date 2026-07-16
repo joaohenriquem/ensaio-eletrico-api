@@ -72,6 +72,18 @@ const migrations: { name: string; sql: string }[] = [
       );
     `,
   },
+  {
+    name: 'contratos_localizacao',
+    sql: `
+      ALTER TABLE contratos
+        ADD COLUMN IF NOT EXISTS latitude_contratante NUMERIC(10,7),
+        ADD COLUMN IF NOT EXISTS longitude_contratante NUMERIC(10,7),
+        ADD COLUMN IF NOT EXISTS endereco_contratante TEXT,
+        ADD COLUMN IF NOT EXISTS latitude_contratada NUMERIC(10,7),
+        ADD COLUMN IF NOT EXISTS longitude_contratada NUMERIC(10,7),
+        ADD COLUMN IF NOT EXISTS endereco_contratada TEXT;
+    `,
+  },
 ]
 
 export async function runMigrations(): Promise<void> {

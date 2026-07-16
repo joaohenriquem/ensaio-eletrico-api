@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { listar, inserir, buscarPorId, atualizar } from '../db.js'
 import { verificarSenha, gerarToken, hashSenha, authMiddleware } from '../auth.js'
 import type { JwtPayload } from '../auth.js'
+import { reverseGeocode } from '../helpers.js'
 import {
   enviarEmailOtp,
   enviarEmailResetSenha,
@@ -15,23 +16,6 @@ const auth = new Hono<{ Variables: { user: JwtPayload } }>()
 
 function gerarOtp(): string {
   return String(Math.floor(100000 + Math.random() * 900000))
-}
-
-async function reverseGeocode(lat: number, lon: number): Promise<string> {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-      { headers: { 'User-Agent': 'EnsaioEletrico/2.0' } }
-    )
-    const data = await res.json() as { display_name?: string; address?: { city?: string; town?: string; state?: string; country?: string } }
-    const a = data.address ?? {}
-    const cidade = a.city ?? a.town ?? ''
-    const estado = a.state ?? ''
-    const pais = a.country ?? ''
-    return [cidade, estado, pais].filter(Boolean).join(', ') || data.display_name || ''
-  } catch {
-    return ''
-  }
 }
 
 auth.post('/login', async (c) => {

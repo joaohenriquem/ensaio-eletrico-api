@@ -71,6 +71,15 @@ function bullet(doc: PDFKit.PDFDocument, texto: string) {
   doc.moveDown(0.1)
 }
 
+function fmtDataHora(v: unknown): string | null {
+  if (!v) return null
+  const d = v instanceof Date ? v : new Date(String(v))
+  if (isNaN(d.getTime())) return null
+  const data = d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+  const hora = d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })
+  return `${data} às ${hora}`
+}
+
 export async function gerarPdfContrato(contrato: Record<string, unknown>): Promise<Buffer> {
   const assinContratadaBuf = await resolverImagem(String(contrato.assinatura_contratada ?? ''))
   const assinContratanteBuf = await resolverImagem(String(contrato.assinatura_contratante ?? ''))
@@ -364,7 +373,7 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
     const nomeContratada = String(contrato.nome_contratada ?? '')
     const LINHA_W = 300
 
-    function linhaAssinatura(rotulo: string, buf: Buffer | null, nome: string) {
+    function linhaAssinatura(rotulo: string, buf: Buffer | null, nome: string, assinadoEm: string | null, localizacao: string | null) {
       doc.moveDown(2.2)
       const yLinha = doc.y + 26
       if (buf) {
@@ -377,15 +386,29 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
       doc.moveTo(MARGEM + 140, yLinha)
         .lineTo(MARGEM + 140 + LINHA_W, yLinha)
         .strokeColor('#555').lineWidth(0.7).stroke()
+      let yTexto = yLinha + 3
       if (nome) {
         doc.font('Helvetica').fontSize(8).fillColor('#555')
-          .text(nome, MARGEM + 140, yLinha + 3, { width: LINHA_W, align: 'center' })
+          .text(nome, MARGEM + 140, yTexto, { width: LINHA_W, align: 'center' })
+        yTexto += 11
       }
-      doc.y = yLinha + 14
+      if (assinadoEm) {
+        const texto = localizacao ? `Assinado em ${assinadoEm} — ${localizacao}` : `Assinado em ${assinadoEm}`
+        doc.font('Helvetica').fontSize(7.5).fillColor('#888')
+          .text(texto, MARGEM + 140, yTexto, { width: LINHA_W, align: 'center' })
+        yTexto += 11
+      }
+      doc.y = Math.max(yLinha + 14, yTexto)
     }
 
-    linhaAssinatura('CONTRATANTE', assinContratanteBuf, nomeContratante)
-    linhaAssinatura('CONTRATADA', assinContratadaBuf, nomeContratada)
+    linhaAssinatura(
+      'CONTRATANTE', assinContratanteBuf, nomeContratante,
+      fmtDataHora(contrato.assinado_contratante_em), (contrato.endereco_contratante as string) || null
+    )
+    linhaAssinatura(
+      'CONTRATADA', assinContratadaBuf, nomeContratada,
+      fmtDataHora(contrato.assinado_contratada_em), (contrato.endereco_contratada as string) || null
+    )
 
     doc.moveDown(1.6)
     doc.font('Helvetica-Bold').fontSize(11).fillColor(COR_AZUL)

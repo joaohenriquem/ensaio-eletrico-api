@@ -3,7 +3,7 @@ import { listar, inserir, atualizar, buscarPorId, proximoNumero, deletar } from 
 import { authMiddleware } from '../auth.js'
 import { gerarPdfContrato } from '../pdf/contrato.js'
 import { gerarTokenAcao, enviarEmailAssinaturaContrato } from '../mailer.js'
-import { dataHojeBR } from '../helpers.js'
+import { dataHojeBR, reverseGeocode } from '../helpers.js'
 import { EMPRESA } from '../constants.js'
 
 const contratos = new Hono()
@@ -49,9 +49,11 @@ contratos.get('/:id/publico', async (c) => {
     assinatura_contratada: contrato.assinatura_contratada,
     nome_contratada: contrato.nome_contratada,
     assinado_contratada_em: contrato.assinado_contratada_em,
+    endereco_contratada: contrato.endereco_contratada,
     assinatura_contratante: contrato.assinatura_contratante,
     nome_contratante: contrato.nome_contratante,
     assinado_contratante_em: contrato.assinado_contratante_em,
+    endereco_contratante: contrato.endereco_contratante,
     assinado: !!contrato.assinado_contratante_em,
     assinado_em: contrato.assinado_contratante_em,
   })
@@ -81,13 +83,23 @@ contratos.post('/:id/assinar', async (c) => {
   if (!contrato) return c.json({ error: 'Não encontrado' }, 404)
   if (contrato.assinado_contratante_em) return c.json({ error: 'Este contrato já foi assinado' }, 409)
 
-  const { nome, assinatura } = await c.req.json<{ nome?: string; assinatura?: string }>()
+  const { nome, assinatura, latitude, longitude } = await c.req.json<{
+    nome?: string
+    assinatura?: string
+    latitude?: number
+    longitude?: number
+  }>()
   if (!nome || !assinatura) return c.json({ error: 'Nome e assinatura são obrigatórios' }, 400)
+
+  const endereco = (latitude != null && longitude != null) ? await reverseGeocode(latitude, longitude) : ''
 
   await atualizar('contratos', id, {
     nome_contratante: nome,
     assinatura_contratante: assinatura,
     assinado_contratante_em: new Date().toISOString(),
+    latitude_contratante: latitude ?? null,
+    longitude_contratante: longitude ?? null,
+    endereco_contratante: endereco || null,
     status: 'assinado',
   })
 
@@ -177,6 +189,12 @@ contratos.post('/', async (c) => {
   const numero = await proximoNumero('contratos', 'CONT')
   const agora = new Date().toISOString()
 
+  const latContratada = body.latitude_contratada as number | undefined
+  const lonContratada = body.longitude_contratada as number | undefined
+  const enderecoContratada = (body.assinatura_contratada && latContratada != null && lonContratada != null)
+    ? await reverseGeocode(latContratada, lonContratada)
+    : ''
+
   const id = await inserir('contratos', {
     numero,
     cliente_id: body.cliente_id ?? null,
@@ -201,6 +219,9 @@ contratos.post('/', async (c) => {
     assinatura_contratada: body.assinatura_contratada ?? null,
     nome_contratada: body.nome_contratada ?? null,
     assinado_contratada_em: body.assinatura_contratada ? agora : null,
+    latitude_contratada: body.assinatura_contratada ? (latContratada ?? null) : null,
+    longitude_contratada: body.assinatura_contratada ? (lonContratada ?? null) : null,
+    endereco_contratada: enderecoContratada || null,
     status: body.status ?? 'rascunho',
   })
 
@@ -214,9 +235,14 @@ contratos.put('/:id', async (c) => {
   const existente = await buscarPorId('contratos', id)
   if (!existente) return c.json({ error: 'Não encontrado' }, 404)
 
-  // registra o momento da assinatura da contratada na primeira vez
+  // registra o momento e a localização da assinatura da contratada na primeira vez
   if (body.assinatura_contratada && !existente.assinado_contratada_em) {
     body.assinado_contratada_em = new Date().toISOString()
+    const lat = body.latitude_contratada as number | undefined
+    const lon = body.longitude_contratada as number | undefined
+    if (lat != null && lon != null) {
+      body.endereco_contratada = (await reverseGeocode(lat, lon)) || null
+    }
   }
 
   const ok = await atualizar('contratos', id, body)
