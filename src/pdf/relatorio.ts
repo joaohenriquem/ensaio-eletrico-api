@@ -17,6 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const COR_AZUL    = '#1a4b9c'
 const COR_ESCURO  = '#1c1c2e'
 const COR_VERMELHO = '#cc0000'
+const COR_VERDE   = '#0a8a3f'
 const COR_CINZA   = '#f5f5f5'
 const COR_ROSA    = '#ffe0e0'
 const COR_BRANCO  = '#ffffff'
@@ -161,7 +162,7 @@ function tabelaChecklist(
 
     doc.font('Helvetica-Bold').fontSize(8)
     if (!nc) {
-      doc.fillColor(COR_ESCURO)
+      doc.fillColor(COR_VERDE)
       doc.text('X', x + COL_ITEM + 2, y + 4, { width: COL_C - 4, align: 'center' })
     } else {
       doc.fillColor(COR_VERMELHO)
@@ -214,7 +215,7 @@ function tabelaVerificacaoEletrica(
       doc.fillColor(COR_ESCURO)
       doc.text(valor || '–', x + COL_ITEM + 2, y + 4, { width: COL_VALOR - 4, align: 'center' })
     } else if (!nc) {
-      doc.fillColor(COR_ESCURO)
+      doc.fillColor(COR_VERDE)
       doc.text('X', x + COL_ITEM + 2, y + 4, { width: COL_VALOR - 4, align: 'center' })
     } else {
       doc.fillColor(COR_VERMELHO)
@@ -367,7 +368,7 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
     doc.moveDown(0.5)
     secaoTitulo(doc, '4. MANUTENÇÃO PREVENTIVA')
     corpo(doc,
-      `SERÁ EXECUTADO MANUTENÇÃO PREVENTIVA EM ${paineis.length} PAINEL(IS) ELÉTRICO(S), TROCA DE LÂMPADAS QUEIMADAS, SENSORES E TOMADAS QUE ESTIVEREM COM DEFEITO.`
+      'MANUTENÇÃO PREVENTIVA IMPRESCINDÍVEL PARA EVITAR PARADAS NÃO PROGRAMADAS, CUSTOS ELEVADOS, PRESERVANDO O DESEMPENHO, SEGURANÇA DA INSTALAÇÃO, EVITANDO RISCOS E GARANTIR A CONFIABILIDADE DO SISTEMA ELÉTRICO.'
     )
 
     // ── PAINÉIS ──────────────────────────────────────────────────────────────
@@ -503,20 +504,6 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
       .text(nomeContratado || 'Assinatura do Técnico', MARGEM + metade + 20, labelY, { width: metade, align: 'center' })
     doc.font('Helvetica').fontSize(7.5).fillColor('#888')
       .text('Técnico Responsável', MARGEM + metade + 20, labelY + 12, { width: metade, align: 'center' })
-
-    // ── AUTENTICIDADE ─────────────────────────────────────────────────────
-    const guid = crypto.randomUUID()
-    const agora = new Date()
-    const dataHora = agora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-    const autenticY = labelY + 30
-    doc
-      .moveTo(MARGEM, autenticY)
-      .lineTo(MARGEM + LARGURA_PAGINA, autenticY)
-      .strokeColor('#e0e0e0').lineWidth(0.5).stroke()
-    doc.font('Helvetica').fontSize(7).fillColor('#aaa')
-      .text(`ID do documento: ${guid}`, MARGEM, autenticY + 5, { width: LARGURA_PAGINA, align: 'center' })
-    doc.font('Helvetica').fontSize(7).fillColor('#aaa')
-      .text(`Assinado digitalmente em: ${dataHora}`, MARGEM, autenticY + 15, { width: LARGURA_PAGINA, align: 'center' })
 
     doc.end()
   })
