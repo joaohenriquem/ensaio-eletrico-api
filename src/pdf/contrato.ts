@@ -116,6 +116,7 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
       titulo: 'CONTRATO DE MANUTENÇÃO ELÉTRICA',
       cliente: String(contrato.cliente_nome ?? ''),
       local: String(contrato.cliente_endereco ?? ''),
+      data: dataBr(contrato.data as string | Date),
     })
     doc.addPage()
 
@@ -145,6 +146,7 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
     bullet(doc, 'Cursos de NR10, NR33, NR35 – Segurança em Instalações Elétricas, Espaços Confinados e Trabalho em Altura')
     bullet(doc, 'Engenharia Elétrica – Universidade Anhembi Morumbi')
     bullet(doc, 'Projetista de Elite – CFPRO – Centro de Formação de Projetistas')
+    bullet(doc, 'Projeto e Instalação de Estações de Recargas – CPERX Treinamentos')
 
     // ── SOBRE A EMPRESA (texto à esquerda + foto da equipe à direita) ─────
     const FOTO_W = 200
@@ -189,7 +191,9 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
 
     // ── INFORMAÇÕES CLIENTE ───────────────────────────────────────────────
     tituloAzul(doc, 'Informações Cliente')
-    corpo(doc, `Condomínio: ${contrato.cliente_nome ?? ''}`)
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COR_TEXTO)
+      .text('Condomínio: ', MARGEM, doc.y, { continued: true, width: LARGURA_PAGINA })
+    doc.font('Helvetica').text(String(contrato.cliente_nome ?? ''), { width: LARGURA_PAGINA })
     doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COR_TEXTO)
       .text('Endereço: ', MARGEM, doc.y, { continued: true, width: LARGURA_PAGINA })
     doc.font('Helvetica').text(String(contrato.cliente_endereco ?? ''), { width: LARGURA_PAGINA })

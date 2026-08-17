@@ -18,11 +18,13 @@ export interface CapaOpts {
   subtitulo?: string
   cliente: string
   local: string
+  /** Data a exibir na capa, já formatada (ex: "17/08/2026"). Se omitida, usa a data de geração do PDF. */
+  data?: string
 }
 
 /**
  * Desenha a capa padrão (página cheia) no documento atual.
- * A "Data" exibida é sempre a data de geração do PDF, não uma data cadastrada.
+ * A "Data" exibida é a data de geração do PDF, a menos que `opts.data` seja informado.
  */
 export function desenharCapa(doc: PDFKit.PDFDocument, opts: CapaOpts) {
   let y = 90
@@ -56,7 +58,7 @@ export function desenharCapa(doc: PDFKit.PDFDocument, opts: CapaOpts) {
   const campos: [string, string][] = [
     ['Cliente:', opts.cliente],
     ['Local:', opts.local],
-    ['Data:', dataBr(new Date())],
+    ['Data:', opts.data ?? dataBr(new Date())],
   ]
 
   // Rótulo em cima e valor embaixo — evita sobreposição quando o valor
