@@ -113,8 +113,7 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
     // ── CAPA (padrão já definido) ─────────────────────────────────────────
     cabecalhoPagina(doc)
     desenharCapa(doc, {
-      titulo: 'PROPOSTA TÉCNICA COMERCIAL',
-      subtitulo: 'Serviços de Manutenção Elétrica',
+      titulo: 'CONTRATO DE MANUTENÇÃO ELÉTRICA',
       cliente: String(contrato.cliente_nome ?? ''),
       local: String(contrato.cliente_endereco ?? ''),
     })
@@ -413,35 +412,6 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
     doc.moveDown(1.6)
     doc.font('Helvetica-Bold').fontSize(11).fillColor(COR_AZUL)
       .text(`Local e data: Osasco, ${dataBr(contrato.data as string | Date)}`, MARGEM, doc.y, { underline: true })
-
-    // ── AUTENTICIDADE ─────────────────────────────────────────────────────
-    const guid = String(contrato.guid ?? crypto.randomUUID())
-    const fmtTs = (v: unknown): string | null => {
-      if (!v) return null
-      const d = v instanceof Date ? v : new Date(String(v))
-      if (isNaN(d.getTime())) return null
-      return d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-    }
-    const tsContratada = fmtTs(contrato.assinado_contratada_em)
-    const tsContratante = fmtTs(contrato.assinado_contratante_em)
-
-    let autenticY = doc.y + 24
-    if (autenticY > doc.page.height - 90) { doc.addPage(); autenticY = doc.y + 10 }
-    doc.moveTo(MARGEM, autenticY)
-      .lineTo(MARGEM + LARGURA_PAGINA, autenticY)
-      .strokeColor('#e0e0e0').lineWidth(0.5).stroke()
-    doc.font('Helvetica').fontSize(7).fillColor('#aaa')
-      .text(`ID do documento: ${guid}`, MARGEM, autenticY + 5, { width: LARGURA_PAGINA, align: 'center' })
-    autenticY += 15
-    if (tsContratada) {
-      doc.font('Helvetica').fontSize(7).fillColor('#aaa')
-        .text(`Técnico responsável assinou digitalmente em: ${tsContratada}`, MARGEM, autenticY, { width: LARGURA_PAGINA, align: 'center' })
-      autenticY += 10
-    }
-    if (tsContratante) {
-      doc.font('Helvetica').fontSize(7).fillColor('#aaa')
-        .text(`Cliente assinou digitalmente em: ${tsContratante}`, MARGEM, autenticY, { width: LARGURA_PAGINA, align: 'center' })
-    }
 
     doc.end()
   })
