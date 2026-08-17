@@ -59,8 +59,6 @@ relatorios.post('/', async (c) => {
     normas: body.normas ?? [],
     objetivo: body.objetivo ?? '',
     paineis: body.paineis ?? [],
-    tomadas: body.tomadas ?? 'Não houve tomadas para troca.',
-    iluminacao: body.iluminacao ?? '',
     conclusao: body.conclusao ?? '',
     assinatura: body.assinatura ?? null,
     nome_aprovador: body.nome_aprovador ?? null,

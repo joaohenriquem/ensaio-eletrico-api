@@ -11,16 +11,16 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
-        value: "postgresql://postgres:[SUA-SENHA]@db.seu-projeto.supabase.co:5432/postgres"
+        sync: false
       - key: JWT_SECRET
-        value: "troque-por-uma-string-longa-e-segura"
+        sync: false
       - key: APP_URL
         value: "https://<seu-servico>.onrender.com"
       - key: BREVO_API_KEY
-        value: ""
+        sync: false
       - key: BREVO_SENDER
         value: "ensaioeletrico.servicos@gmail.com"
       - key: SUPABASE_URL
-        value: "https://<seu-projeto>.supabase.co"
+        sync: false
       - key: SUPABASE_ANON_KEY
-        value: ""
+        sync: false

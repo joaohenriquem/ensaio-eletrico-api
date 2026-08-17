@@ -343,11 +343,9 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
     ]
     const nFim = paineis.length + 5
     secoes.push(
-      `${nFim}. TOMADAS`,
-      `${nFim + 1}. ILUMINAÇÃO`,
-      `${nFim + 2}. CONCLUSÃO`,
-      `${nFim + 3}. RESPONSABILIDADE TÉCNICA`,
-      `${nFim + 4}. APROVAÇÃO DO SERVIÇO`,
+      `${nFim}. CONCLUSÃO`,
+      `${nFim + 1}. RESPONSABILIDADE TÉCNICA`,
+      `${nFim + 2}. APROVAÇÃO DO SERVIÇO`,
     )
     secoes.forEach(s => {
       doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COR_AZUL).text(s, { indent: 10, lineGap: 1 })
@@ -430,18 +428,12 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
     if (doc.y > 600) doc.addPage()
     linhaHorizontal(doc)
 
-    secaoTitulo(doc, `${nFim}. TOMADAS`)
-    corpo(doc, String(relatorio.tomadas || 'NÃO HOUVE TOMADAS PARA TROCA.').toUpperCase())
-
-    secaoTitulo(doc, `${nFim + 1}. ILUMINAÇÃO`)
-    corpo(doc, String(relatorio.iluminacao || '–').toUpperCase())
-
-    secaoTitulo(doc, `${nFim + 2}. CONCLUSÃO`)
+    secaoTitulo(doc, `${nFim}. CONCLUSÃO`)
     corpo(doc, String(relatorio.conclusao || '').toUpperCase())
 
     // ── RESPONSABILIDADE TÉCNICA ──────────────────────────────────────────────
     if (doc.y > 640) doc.addPage()
-    secaoTitulo(doc, `${nFim + 3}. RESPONSABILIDADE TÉCNICA`)
+    secaoTitulo(doc, `${nFim + 1}. RESPONSABILIDADE TÉCNICA`)
 
     const tecnico = String(relatorio.tecnico ?? '')
     const cft = String(relatorio.cft ?? '')
@@ -474,7 +466,7 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
 
     if (doc.y > 620) doc.addPage()
     linhaHorizontal(doc)
-    secaoTitulo(doc, `${nFim + 4}. APROVAÇÃO DO SERVIÇO`)
+    secaoTitulo(doc, `${nFim + 2}. APROVAÇÃO DO SERVIÇO`)
 
     const metade = (LARGURA_PAGINA - 20) / 2
     const ASSIN_H = 70
