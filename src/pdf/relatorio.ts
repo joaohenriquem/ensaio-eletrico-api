@@ -349,7 +349,11 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
       '2. OBJETIVO',
       '3. REFERÊNCIAS NORMATIVAS',
       '4. MANUTENÇÃO PREVENTIVA',
-      ...paineis.map((p, i) => `${i + 5}. ${(p.nome || 'PAINEL').toUpperCase()}`),
+      ...paineis.map((p, i) => {
+        const nome = (p.nome || 'PAINEL').toUpperCase()
+        const tipo = p.tipo ? ` – ${p.tipo.toUpperCase()}` : ''
+        return `${i + 5}. ${nome}${tipo}`
+      }),
     ]
     const nFim = paineis.length + 5
     const nConclusao = nFim
