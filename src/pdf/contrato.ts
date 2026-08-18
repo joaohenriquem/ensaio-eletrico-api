@@ -205,7 +205,6 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
 
     // ── ESCOPO ────────────────────────────────────────────────────────────
     tituloAzul(doc, 'Escopo dos Serviços')
-    corpo(doc, `Manutenção nos Painéis Elétricos (${locais}).`, { negrito: true })
     corpo(
       doc,
       'Executar limpeza, reaperto das conexões e medições de tensão e corrente na saída do disjuntor geral, afim de ' +

@@ -60,6 +60,7 @@ relatorios.post('/', async (c) => {
     objetivo: body.objetivo ?? '',
     paineis: body.paineis ?? [],
     conclusao: body.conclusao ?? '',
+    anexos: body.anexos ?? [],
     assinatura: body.assinatura ?? null,
     nome_aprovador: body.nome_aprovador ?? null,
     assinatura_contratado: body.assinatura_contratado ?? null,

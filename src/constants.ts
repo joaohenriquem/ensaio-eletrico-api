@@ -85,6 +85,7 @@ export const CAMPOS_JSONB = [
   'etapas',
   'investimento',
   'fotos',
+  'anexos',
 ]
 
 export const TIPOS_OS = [

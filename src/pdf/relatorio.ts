@@ -280,9 +280,17 @@ function fotosEmLinha(doc: PDFKit.PDFDocument, fotosBuf: (Buffer | null)[]) {
 }
 
 // ── GERADOR PRINCIPAL ─────────────────────────────────────────────────────────
+interface AnexoData { nome: string; url: string }
+
+function anexoEhImagem(anexo: AnexoData): boolean {
+  return /\.(jpe?g|png|gif|webp)$/i.test(anexo.nome || anexo.url)
+}
+
 export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Promise<Buffer> {
   const paineisPre: PainelData[] = Array.isArray(relatorio.paineis)
     ? (relatorio.paineis as PainelData[]) : []
+  const anexos: AnexoData[] = Array.isArray(relatorio.anexos)
+    ? (relatorio.anexos as AnexoData[]).slice(0, 5) : []
 
   // Coleta todos os srcs únicos para pré-busca
   const allSrcs = new Set<string>()
@@ -291,6 +299,7 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
       ...(p.fotos_limpeza_tecnica ?? []),
       ...(p.fotos_reaperto_mecanico ?? [])].forEach(s => s && allSrcs.add(s))
   })
+  anexos.filter(anexoEhImagem).forEach(a => allSrcs.add(a.url))
   const assinSrc = String(relatorio.assinatura ?? '')
   const assinContratadoSrc = String(relatorio.assinatura_contratado ?? '')
   if (assinSrc) allSrcs.add(assinSrc)
@@ -343,10 +352,15 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
       ...paineis.map((p, i) => `${i + 5}. ${(p.nome || 'PAINEL').toUpperCase()}`),
     ]
     const nFim = paineis.length + 5
+    const nConclusao = nFim
+    const nAnexos = anexos.length > 0 ? nConclusao + 1 : null
+    const nResp = (nAnexos ?? nConclusao) + 1
+    const nAprov = nResp + 1
+    secoes.push(`${nConclusao}. CONCLUSÃO`)
+    if (nAnexos) secoes.push(`${nAnexos}. ANEXOS`)
     secoes.push(
-      `${nFim}. CONCLUSÃO`,
-      `${nFim + 1}. RESPONSABILIDADE TÉCNICA`,
-      `${nFim + 2}. APROVAÇÃO DO SERVIÇO`,
+      `${nResp}. RESPONSABILIDADE TÉCNICA`,
+      `${nAprov}. APROVAÇÃO DO SERVIÇO`,
     )
     secoes.forEach(s => {
       doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COR_AZUL).text(s, { indent: 10, lineGap: 1 })
@@ -429,12 +443,40 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
     if (doc.y > 600) doc.addPage()
     linhaHorizontal(doc)
 
-    secaoTitulo(doc, `${nFim}. CONCLUSÃO`)
+    secaoTitulo(doc, `${nConclusao}. CONCLUSÃO`)
     corpo(doc, String(relatorio.conclusao || '').toUpperCase())
+
+    // ── ANEXOS ──────────────────────────────────────────────────────────────
+    if (nAnexos) {
+      if (doc.y > 580) doc.addPage()
+      secaoTitulo(doc, `${nAnexos}. ANEXOS`)
+      anexos.forEach(anexo => {
+        const buf = anexoEhImagem(anexo) ? getBuf(anexo.url) : null
+        if (buf) {
+          if (doc.y > 640) doc.addPage()
+          const W = 220
+          const H = 160
+          try {
+            doc.rect(MARGEM, doc.y, W, H).stroke(COR_BORDA)
+            doc.image(buf, MARGEM + 2, doc.y + 2, { fit: [W - 4, H - 4], align: 'center', valign: 'center' })
+          } catch { /* ignora */ }
+          doc.y += H + 3
+          doc.font('Helvetica').fontSize(8).fillColor('#666')
+            .text(anexo.nome || '', MARGEM, doc.y, { width: W })
+          doc.moveDown(0.6)
+        } else {
+          if (doc.y > 700) doc.addPage()
+          doc.font('Helvetica').fontSize(9.5).fillColor(COR_AZUL)
+            .text(anexo.nome || anexo.url, MARGEM, doc.y, { link: anexo.url, underline: true, width: LARGURA_PAGINA, lineGap: 2.5 })
+          doc.moveDown(0.3)
+        }
+      })
+      doc.moveDown(0.3)
+    }
 
     // ── RESPONSABILIDADE TÉCNICA ──────────────────────────────────────────────
     if (doc.y > 640) doc.addPage()
-    secaoTitulo(doc, `${nFim + 1}. RESPONSABILIDADE TÉCNICA`)
+    secaoTitulo(doc, `${nResp}. RESPONSABILIDADE TÉCNICA`)
 
     const tecnico = String(relatorio.tecnico ?? '')
     const cft = String(relatorio.cft ?? '')
@@ -467,7 +509,7 @@ export async function gerarPdfRelatorio(relatorio: Record<string, unknown>): Pro
 
     if (doc.y > 620) doc.addPage()
     linhaHorizontal(doc)
-    secaoTitulo(doc, `${nFim + 2}. APROVAÇÃO DO SERVIÇO`)
+    secaoTitulo(doc, `${nAprov}. APROVAÇÃO DO SERVIÇO`)
 
     const metade = (LARGURA_PAGINA - 20) / 2
     const ASSIN_H = 70

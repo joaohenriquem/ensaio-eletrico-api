@@ -84,6 +84,13 @@ const migrations: { name: string; sql: string }[] = [
         ADD COLUMN IF NOT EXISTS endereco_contratada TEXT;
     `,
   },
+  {
+    name: 'relatorios_anexos',
+    sql: `
+      ALTER TABLE relatorios
+        ADD COLUMN IF NOT EXISTS anexos JSONB DEFAULT '[]';
+    `,
+  },
 ]
 
 export async function runMigrations(): Promise<void> {
