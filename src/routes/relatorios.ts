@@ -44,9 +44,20 @@ relatorios.post('/', async (c) => {
     return c.json({ error: 'Cliente e local são obrigatórios' }, 400)
   }
 
+  // Retry idempotente de uma criação enfileirada offline: se esse id já foi
+  // inserido numa tentativa anterior, devolve o registro existente em vez
+  // de gastar um novo número e tentar inserir de novo.
+  if (typeof body.id === 'string') {
+    const existente = await buscarPorId('relatorios', body.id)
+    if (existente) {
+      return c.json({ id: existente.id, numero: existente.numero }, 201)
+    }
+  }
+
   const numero = await proximoNumero('relatorios', 'REL')
 
   const id = await inserir('relatorios', {
+    ...(typeof body.id === 'string' ? { id: body.id } : {}),
     numero,
     cliente_id: body.cliente_id ?? null,
     cliente_nome: body.cliente_nome,

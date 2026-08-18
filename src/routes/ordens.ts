@@ -29,9 +29,20 @@ ordens.post('/', async (c) => {
     return c.json({ error: 'Cliente e descrição são obrigatórios' }, 400)
   }
 
+  // Retry idempotente de uma criação enfileirada offline: se esse id já foi
+  // inserido numa tentativa anterior, devolve o registro existente em vez
+  // de gastar um novo número e tentar inserir de novo.
+  if (typeof body.id === 'string') {
+    const existente = await buscarPorId('ordens_servico', body.id)
+    if (existente) {
+      return c.json({ id: existente.id, numero: existente.numero }, 201)
+    }
+  }
+
   const numero = await proximoNumero('ordens_servico', 'OS')
 
   const id = await inserir('ordens_servico', {
+    ...(typeof body.id === 'string' ? { id: body.id } : {}),
     numero,
     cliente_id: body.cliente_id ?? null,
     cliente_nome: body.cliente_nome,

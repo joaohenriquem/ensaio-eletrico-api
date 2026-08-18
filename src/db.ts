@@ -84,14 +84,22 @@ export async function inserir(tabela: string, doc: Record<string, unknown>): Pro
     criado_em: agora,
     atualizado_em: agora,
   }
+  const temId = typeof doc.id === 'string'
   const campos = Object.keys(data)
   const valores = Object.values(data)
   const placeholders = campos.map((_, i) => `$${i + 1}`).join(', ')
-  const sql = `INSERT INTO ${tabela} (${campos.join(', ')}) VALUES (${placeholders}) RETURNING id`
+  // Quando o chamador já sabe o id (retry de uma criação feita offline),
+  // a inserção precisa ser idempotente: se esse id já existir, não duplica
+  // a linha — só confirma que ela já está lá.
+  const sql = temId
+    ? `INSERT INTO ${tabela} (${campos.join(', ')}) VALUES (${placeholders}) ON CONFLICT (id) DO NOTHING RETURNING id`
+    : `INSERT INTO ${tabela} (${campos.join(', ')}) VALUES (${placeholders}) RETURNING id`
   const client = await (await pool()).connect()
   try {
     const res = await client.query(sql, valores)
-    return String(res.rows[0].id)
+    if (res.rows.length > 0) return String(res.rows[0].id)
+    if (temId) return String(doc.id)
+    throw new Error(`Falha ao inserir em ${tabela}: nenhuma linha retornada`)
   } finally {
     client.release()
   }
