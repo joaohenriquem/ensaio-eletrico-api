@@ -321,6 +321,27 @@ export async function gerarPdfContrato(contrato: Record<string, unknown>): Promi
     corpo(doc, 'Conta Corrente: 47093601-0')
     corpo(doc, `Chave Pix (CNPJ): ${EMPRESA.pix}`)
 
+    if (doc.y > 600) doc.addPage()
+    tituloAzul(doc, 'CLÁUSULA 7-A – RETENÇÃO DE PAGAMENTO POR FALHA OU ATRASO NA PRESTAÇÃO DOS SERVIÇOS')
+    corpo(
+      doc,
+      'Em caso de falha na prestação dos serviços ou atraso na entrega dos serviços contratados, poderá o ' +
+        'CONTRATANTE reter os valores mensais devidos à CONTRATADA, mediante notificação prévia por escrito à ' +
+        'CONTRATADA, informando as falhas ou o atraso identificado.'
+    )
+    corpo(
+      doc,
+      'A CONTRATADA terá o prazo de 7 (sete) dias úteis, contados do recebimento da notificação, para regularizar ' +
+        'a prestação dos serviços. Regularizada a pendência, o pagamento dos valores retidos será efetuado no ' +
+        'prazo de 2 (dois) dias úteis, sem incidência de multa ou correção em favor da CONTRATADA.'
+    )
+    corpo(
+      doc,
+      'Caso a irregularidade não seja sanada no prazo estipulado, o CONTRATANTE poderá, a seu critério, (i) manter ' +
+        'a retenção até a efetiva regularização, e/ou (ii) considerar rescindido o contrato nos termos da Cláusula ' +
+        '9 – Rescisão, sem prejuízo das demais penalidades aplicáveis.'
+    )
+
     tituloAzul(doc, 'CLÁUSULA 8 – PRAZO DE VIGÊNCIA')
     corpo(doc, 'Este contrato terá duração de:')
     corpo(
