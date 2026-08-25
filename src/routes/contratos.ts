@@ -24,6 +24,11 @@ contratos.get('/:id/publico', async (c) => {
   const contrato = await buscarPorId('contratos', id)
   if (!contrato) return c.json({ error: 'Não encontrado' }, 404)
 
+  if (!contrato.visualizado_contratante_em) {
+    contrato.visualizado_contratante_em = new Date().toISOString()
+    await atualizar('contratos', id, { visualizado_contratante_em: contrato.visualizado_contratante_em })
+  }
+
   // expõe apenas o necessário para a página pública (sem dados internos)
   return c.json({
     _id: contrato._id,
@@ -54,6 +59,7 @@ contratos.get('/:id/publico', async (c) => {
     nome_contratante: contrato.nome_contratante,
     assinado_contratante_em: contrato.assinado_contratante_em,
     endereco_contratante: contrato.endereco_contratante,
+    visualizado_contratante_em: contrato.visualizado_contratante_em,
     assinado: !!contrato.assinado_contratante_em,
     assinado_em: contrato.assinado_contratante_em,
   })
