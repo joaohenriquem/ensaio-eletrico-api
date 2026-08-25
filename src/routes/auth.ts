@@ -139,6 +139,25 @@ auth.post('/verify-otp', async (c) => {
 auth.use('/refresh', authMiddleware)
 auth.post('/refresh', async (c) => {
   const user = c.get('user')
+  const { latitude, longitude } = await c.req.json<{ latitude?: number; longitude?: number }>().catch(() => ({}) as { latitude?: number; longitude?: number })
+
+  let endereco = ''
+  if (latitude != null && longitude != null) {
+    endereco = await reverseGeocode(latitude, longitude)
+  }
+
+  try {
+    await inserir('login_logs', {
+      usuario_id: user.id,
+      usuario_nome: user.nome,
+      latitude: latitude ?? null,
+      longitude: longitude ?? null,
+      endereco: endereco || null,
+    })
+  } catch (err) {
+    console.error('Erro ao registrar login log (sessão salva):', err)
+  }
+
   const token = await gerarToken({
     id: user.id,
     username: user.username,
