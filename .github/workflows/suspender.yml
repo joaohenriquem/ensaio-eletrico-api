@@ -1,9 +1,9 @@
-name: Suspender API (20:00 BRT)
+name: Suspender API (00:00 BRT)
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 23 * * *'   # 20:00 BRT (23:00 UTC) — horário alvo
+    - cron: '0 3 * * *'    # 00:00 BRT (03:00 UTC) — horário alvo
 
 jobs:
   suspender:
